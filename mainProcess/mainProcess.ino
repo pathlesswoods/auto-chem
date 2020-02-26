@@ -5,17 +5,26 @@
 #include <SPI.h>
 
 //custom libraries
-//#include <MotorPresets.h>
+//#include <ValvePositions.h>
 
 //Defines for pins and variables for hardware
 //LCD
 //Motors <-variables should go in custom library
 //Pumps
 //Speaker
+//int speaker = #;
 //SD
-const int chipSelect=4;
+const int chipSelect=28;
+//Potentiometers
+//int coarsePot = #;
+//int finePot = #;
 //LEDS
+//int runningLED = #;
+//int alertLED = #
 //Buttons
+//int selectButton = #;
+//int cancelButton = #;
+//int emergencyButton = #;
 
 //common global variables
 
@@ -33,20 +42,25 @@ void setup() {
   }
   Serial.println("Card initialized. ");
 
-  //set up clock
-  
+  //set up LEDs
+  //pinMode(alertLED, OUTPUT);
+  //pinMode(runningLED, OUTPUT);
 }
 
 //main loop
 void loop() {
+  //initialize LEDs
+  //digitalWrite(alertLED, LOW);
+  //digitalWrite(runningLED, LOW);
+  
   //create file using date and time to make the name
   //call menu function
   //File dataFile = SD.open("nameoffile", FILE_WRITE);
   //close after writing to it
 }
 
-//menu function
-void menu(){
+//handle everything the user interacts with (LCD, BUTTONS, POTS)
+void doUserInterface(){
   const int MenuLanding = 0;
   const int SelectFlowOne = 1;
   const int SelectVolumeOne = 2;
