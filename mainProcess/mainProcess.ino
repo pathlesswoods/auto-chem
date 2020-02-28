@@ -3,11 +3,12 @@
 #include <SD.h>
 #include <RTCZero.h>
 #include <SPI.h>
+#include <RTCZero.h>
 
 //custom libraries
 //#include <ValvePositions.h>
 
-//Defines for pins and variables for hardware
+//Defines for hardware pins
 //LCD
 //Motors <-variables should go in custom library
 //Pumps
@@ -27,13 +28,23 @@ const int chipSelect=28;
 //int emergencyButton = #;
 
 //common global variables
+//Real-time clock variables
+RTCZero rtc;
+const byte seconds = 0;
+const byte minutes = 16;
+const byte hours = 14;
+const byte day = 27;
+const byte month = 2;
+const byte year = 20;
 
 void setup() {
-  //setup SD
+  //Below establish serial communication for debugging 
   Serial.begin(9600);
   while(!Serial){
     //gotta wait on the serial port connection
   }
+  
+  //setup SD
   Serial.print("Initializing SD card...");
   if(!SD.begin(chipSelect)){
     Serial.println("Card failed, or not present at all");
@@ -41,6 +52,11 @@ void setup() {
     while(true);
   }
   Serial.println("Card initialized. ");
+
+  //set up real-time clock
+  rtc.begin();
+  rtc.setTime(hours, minutes, seconds);
+  rtc.setDate(day, month, year);
 
   //set up LEDs
   //pinMode(alertLED, OUTPUT);
@@ -53,10 +69,26 @@ void loop() {
   //digitalWrite(alertLED, LOW);
   //digitalWrite(runningLED, LOW);
   
-  //create file using date and time to make the name
-  //call menu function
-  //File dataFile = SD.open("nameoffile", FILE_WRITE);
+  //Create unique filename by using date and time
+  String secondsDec = String(seconds, DEC);
+  String minutesDec = String(minutes, DEC);
+  String hoursDec = String(hours, DEC);
+  String dayDec = String(day, DEC);
+  String monthDec = String(month, DEC);
+  String yearDec = String(year, DEC);
+  String fileName = String(monthDec + dayDec + hoursDec + minutesDec);
+  Serial.println("File name is...");
+  Serial.println(fileName);
+  
+  //call ui function
+  
+  //File dataFile = SD.open(fileName, FILE_WRITE);
   //close after writing to it
+  delay(1000);
+}
+
+void padDigits(int number){
+  
 }
 
 //handle everything the user interacts with (LCD, BUTTONS, POTS)
