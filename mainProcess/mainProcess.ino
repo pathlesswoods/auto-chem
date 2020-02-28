@@ -71,12 +71,10 @@ void loop() {
   //digitalWrite(runningLED, LOW);
   
   //Create unique filename by using date and time
-  String secondsDec = String(seconds, DEC);
   String minutesDec = String(minutes, DEC);
   String hoursDec = String(hours, DEC);
   String dayDec = String(day, DEC);
   String monthDec = String(month, DEC);
-  String yearDec = String(year, DEC);
   String fileName = String(monthDec + dayDec + hoursDec + minutesDec);
   Serial.println("File name is...");
   Serial.println(fileName);
