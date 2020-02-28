@@ -15,7 +15,6 @@
 //Speaker
 //int speaker = #;
 //SD
-const int chipSelect=28;
 //Potentiometers
 //int coarsePot = #;
 //int finePot = #;
@@ -36,6 +35,8 @@ const byte hours = 14;
 const byte day = 27;
 const byte month = 2;
 const byte year = 20;
+//SD
+const int chipSelect=28;
 
 void setup() {
   //Below establish serial communication for debugging 
@@ -82,13 +83,25 @@ void loop() {
   
   //call ui function
   
-  //File dataFile = SD.open(fileName, FILE_WRITE);
-  //close after writing to it
-  delay(1000);
-}
-
-void padDigits(int number){
+  File logFile = SD.open(fileName, FILE_WRITE);
+  String dataString = "Test";
+  if(logFile){
+    logFile.println(dataString);
+    logFile.close();
+    Serial.println(dataString);
+  }else{
+    Serial.println("error with the file");
+  }
   
+  delay(5000);
+  
+}//end main loop function
+
+//Pad a zero in front of digits
+void padDigits(int number){
+  if(number <10){
+    
+  }
 }
 
 //handle everything the user interacts with (LCD, BUTTONS, POTS)
@@ -129,4 +142,4 @@ void doUserInterface(){
         break;
     }
   }
-}
+}//end doUserInterface function
