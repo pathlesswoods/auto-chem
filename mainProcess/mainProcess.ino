@@ -80,7 +80,8 @@ void loop() {
   Serial.println(fileName);
   
   //call ui function
-  
+
+  //open file and write user selected values to it.
   File logFile = SD.open(fileName, FILE_WRITE);
   String dataString = "Test";
   if(logFile){
@@ -90,6 +91,24 @@ void loop() {
   }else{
     Serial.println("error with the file");
   }
+
+  //calculate the runtime from the entered variables. 
+
+  //Set valves to their flow reagent position
+  
+  //Call UI function to ask user to prime pumps
+  
+  //command pump to turn on
+
+  //Log the time the process started
+
+  //run for alloted time
+
+  //log the end time
+
+  //Call UI to ask user if done.
+
+
   
   delay(5000);
   
