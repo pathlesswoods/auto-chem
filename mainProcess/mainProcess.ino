@@ -98,15 +98,23 @@ void loop() {
   
   //Call UI function to ask user to prime pumps
   
-  //command pump to turn on
+  //command pump to turn on/start pump
 
   //Log the time the process started
 
   //run for alloted time
 
+  //command pump to turn off/stop pump
+  
   //log the end time
 
   //Call UI to ask user if done.
+
+  //Set valves to flow inert gas to clear the lines
+
+  //Call UI to ask user if done clearing the lines.
+
+  //Set valves to closed.
 
 
   
@@ -160,3 +168,12 @@ void doUserInterface(){
     }
   }
 }//end doUserInterface function
+
+void emergencyShutdown(){
+  //send command to turn on emergencyLED
+  //send command to turn off pumps
+  //send command to turn valves to closed
+  //Write current time and emergency message to SD
+  //-scope issue here, as the name of file is not know to this funciton
+  
+}//end emergencyShutdown function
