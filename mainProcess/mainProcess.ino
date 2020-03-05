@@ -13,18 +13,18 @@
 //Motors <-variables should go in custom library
 //Pumps
 //Speaker
-//int speaker = #;
+//const int speaker = #;
 //SD
 //Potentiometers
-//int coarsePot = #;
-//int finePot = #;
+//const int coarsePot = #;
+//const int finePot = #;
 //LEDS
-//int runningLED = #;
-//int alertLED = #
+//const int runningLED = #;
+//const int alertLED = #
 //Buttons
-//int selectButton = #;
-//int cancelButton = #;
-//int emergencyButton = #;
+//const int selectButton = #;
+//const int cancelButton = #;
+//const int emergencyButton = #;
 
 //common global variables
 //Real-time clock variables
@@ -62,6 +62,12 @@ void setup() {
   //set up LEDs
   //pinMode(alertLED, OUTPUT);
   //pinMode(runningLED, OUTPUT);
+
+  //set up buttons
+  //pinMode(selectButton, INPUT);
+
+  //set up speaker
+  //pinMode(speaker, OUTPUT);
 }
 
 //main loop
@@ -174,6 +180,15 @@ void emergencyShutdown(){
   //send command to turn off pumps
   //send command to turn valves to closed
   //Write current time and emergency message to SD
-  //-scope issue here, as the name of file is not know to this funciton
+  //-scope issue here, as the name of file is not known to this funciton
+  /*
+  while(1){
+    //sound alert through speaker
+    digitalWrite(speaker, HIGH);
+    delay(100);
+    digitalWrite(speaker,LOW);
+    delay(1000);
+  }
+  */
   
 }//end emergencyShutdown function
