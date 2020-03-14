@@ -38,6 +38,17 @@ const byte year = 20;
 //SD
 const int chipSelect=28;
 
+//states for the main loop
+const int init = 0;
+const int selectParameters = 1;
+const int calculations = 2;
+const int startProcess = 3;
+const int processRunning = 4;
+const int stopProcess = 5;
+const int cleanUpProcess = 6;
+
+int state = 0;
+
 void setup() {
   //Below establish serial communication for debugging 
   Serial.begin(9600);
@@ -72,58 +83,82 @@ void setup() {
 
 //main loop
 void loop() {
-  //initialize LEDs
-  //digitalWrite(alertLED, LOW);
-  //digitalWrite(runningLED, LOW);
-  
-  //Create unique filename by using date and time
-  String minutesDec = String(minutes, DEC);
-  String hoursDec = String(hours, DEC);
-  String dayDec = String(day, DEC);
-  String monthDec = String(month, DEC);
-  String fileName = String(monthDec + dayDec + hoursDec + minutesDec);
-  Serial.println("File name is...");
-  Serial.println(fileName);
-  
-  //call ui function
+  switch(state){
+    case init:
+      //initialize LEDs
+      //digitalWrite(alertLED, LOW);
+      //digitalWrite(runningLED, LOW);
 
-  //open file and write user selected values to it.
-  File logFile = SD.open(fileName, FILE_WRITE);
-  String dataString = "Test";
-  if(logFile){
-    logFile.println(dataString);
-    logFile.close();
-    Serial.println(dataString);
-  }else{
-    Serial.println("error with the file");
+      //Create unique filename by using date and time
+      String minutesDec = String(minutes, DEC);
+      String hoursDec = String(hours, DEC);
+      String dayDec = String(day, DEC);
+      String monthDec = String(month, DEC);
+      String fileName = String(monthDec + dayDec + hoursDec + minutesDec);
+      Serial.println("File name is...");
+      Serial.println(fileName);
+
+      state = selectParameters;
+      break;
+      
+    case selectParameters:
+      //call UI function to get user entered parameters
+      
+      //open file and write user selected values to it.
+      File logFile = SD.open(fileName, FILE_WRITE);
+      String dataString = "Test";
+      if(logFile){
+        logFile.println(dataString);
+        logFile.close();
+        Serial.println(dataString);
+      }else{
+        Serial.println("error with the file");
+      }
+
+      //calculate the runtime
+
+     //log the runtime
+     
+      state = startProcess;
+      break;
+    case startProcess:
+
+      //set valves to flow reagent position
+
+      //call UI function to ask user to prime pumps
+
+      //command pump to turn on/start pump
+
+       //Log the time the process started
+      
+      state = processRunning;
+      break;
+    case processRunning:
+      //run for alloted time
+      state = stopProcess;
+      break;
+    case stopProcess:
+      //command pump to turn off/stop pump
+  
+      //log the end time
+
+      //Call UI to ask user if done.
+      
+      state = cleanUpProcess;
+      break;
+    case cleanUpProcess:
+      //Set valves to flow inert gas to clear the lines
+
+      //Call UI to ask user if done clearing the lines.
+
+      //Set valves to closed.
+      state = init;
+      break;
+    default:
+      //elegantly catch errors  
   }
-
-  //calculate the runtime from the entered variables. 
-
-  //Set valves to their flow reagent position
   
-  //Call UI function to ask user to prime pumps
-  
-  //command pump to turn on/start pump
-
-  //Log the time the process started
-
-  //run for alloted time
-
-  //command pump to turn off/stop pump
-  
-  //log the end time
-
-  //Call UI to ask user if done.
-
-  //Set valves to flow inert gas to clear the lines
-
-  //Call UI to ask user if done clearing the lines.
-
-  //Set valves to closed.
-
-
-  
+  //delay for testing purposes
   delay(5000);
   
 }//end main loop function
