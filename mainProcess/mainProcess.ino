@@ -79,7 +79,8 @@ void setup() {
 
   //set up speaker
   //pinMode(speaker, OUTPUT);
-}
+}//end setup function
+
 
 //main loop
 void loop() {
@@ -163,12 +164,14 @@ void loop() {
   
 }//end main loop function
 
+
 //Pad a zero in front of digits
 void padDigits(int number){
   if(number <10){
     
   }
-}
+}//end padDigits function
+
 
 //handle everything the user interacts with (LCD, BUTTONS, POTS)
 void doUserInterface(){
@@ -209,6 +212,7 @@ void doUserInterface(){
     }
   }
 }//end doUserInterface function
+
 
 void emergencyShutdown(){
   //send command to turn on emergencyLED
