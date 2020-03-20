@@ -27,8 +27,8 @@
 //const int cancelButton = #;
 //const int emergencyButton = #;
 
-//common global variables
-//Real-time clock variables
+// Common Global Variables and Initalizations
+//Real-time
 RTCZero rtc;
 const byte seconds = 0;
 const byte minutes = 16;
@@ -38,6 +38,8 @@ const byte month = 2;
 const byte year = 20;
 //SD
 const int chipSelect=28;
+//LCD
+LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 20, 4);
 
 //states for the main loop
 const int init = 0;
@@ -70,6 +72,10 @@ void setup() {
   rtc.begin();
   rtc.setTime(hours, minutes, seconds);
   rtc.setDate(day, month, year);
+
+  // Initiate the LCD:
+  // lcd.init();
+  // lcd.backlight();
 
   //set up LEDs
   //pinMode(alertLED, OUTPUT);
