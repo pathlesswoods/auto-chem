@@ -1,5 +1,6 @@
 //arduino libraries
-#include <LiquidCrystal.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 #include <SD.h>
 #include <RTCZero.h>
 #include <SPI.h>
