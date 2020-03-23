@@ -49,6 +49,7 @@ const int startProcess = 3;
 const int processRunning = 4;
 const int stopProcess = 5;
 const int cleanUpProcess = 6;
+const int hardwareTesting = 7;
 
 int state = 0;
 
@@ -161,6 +162,9 @@ void loop() {
 
       //Set valves to closed.
       state = init;
+      break;
+    case hardwareTesting:
+      //this case is to help trouble shoot hardware
       break;
     default:
       //elegantly catch errors  
