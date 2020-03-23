@@ -37,12 +37,12 @@ const byte day = 27;
 const byte month = 2;
 const byte year = 20;
 //SD
-const int chipSelect=28;
+const int chipSelect = 28;
 //LCD
 LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 20, 4);
 
 //states for the main loop
-const int init = 0;
+const int initial = 0;
 const int selectParameters = 1;
 const int calculations = 2;
 const int startProcess = 3;
@@ -52,6 +52,7 @@ const int cleanUpProcess = 6;
 const int hardwareTesting = 7;
 
 int state = 0;
+//float runtime = 0;
 
 void setup() {
   //Below establish serial communication for debugging 
@@ -93,7 +94,7 @@ void setup() {
 //main loop
 void loop() {
   switch(state){
-    case init:
+    case initial:
       //initialize LEDs
       //digitalWrite(alertLED, LOW);
       //digitalWrite(runningLED, LOW);
@@ -125,6 +126,7 @@ void loop() {
       }
 
       //calculate the runtime
+      //runtime=
 
      //log the runtime
      
