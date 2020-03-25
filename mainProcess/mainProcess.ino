@@ -38,6 +38,8 @@ const byte month = 2;
 const byte year = 20;
 //SD
 const int chipSelect = 28;
+String fileName = "";
+//File logFile;
 //LCD
 LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 20, 4);
 
@@ -104,7 +106,7 @@ void loop() {
       String hoursDec = String(hours, DEC);
       String dayDec = String(day, DEC);
       String monthDec = String(month, DEC);
-      String fileName = String(monthDec + dayDec + hoursDec + minutesDec);
+      fileName = String(monthDec + dayDec + hoursDec + minutesDec);
       Serial.println("File name is...");
       Serial.println(fileName);
 
@@ -115,6 +117,7 @@ void loop() {
       //call UI function to get user entered parameters
       
       //open file and write user selected values to it.
+      fileName = "sweet nothings";
       File logFile = SD.open(fileName, FILE_WRITE);
       String dataString = "Test";
       if(logFile){
@@ -128,7 +131,7 @@ void loop() {
       //calculate the runtime
       //runtime=
 
-     //log the runtime
+      //log the runtime
      
       state = startProcess;
       break;
@@ -140,7 +143,7 @@ void loop() {
 
       //command pump to turn on/start pump
 
-       //Log the time the process started
+      //Log the time the process started
       
       state = processRunning;
       break;
@@ -163,7 +166,7 @@ void loop() {
       //Call UI to ask user if done clearing the lines.
 
       //Set valves to closed.
-      state = init;
+      state = initial;
       break;
     case hardwareTesting:
       //this case is to help trouble shoot hardware
@@ -228,11 +231,53 @@ void doUserInterface(){
 
 
 void emergencyShutdown(){
-  //send command to turn on emergencyLED
+  //send command to turn on emergencyLED  
+  digitalWrite(alertLED, HIGH);
+  
   //send command to turn off pumps
+  digitalWrite(P1CTL, HIGH);
+  digitalWrite(P2CTL, HIGH);
+  analogWrite(P1Speed, 0);
+  analogWrite(P2Speed, 0);
+  
   //send command to turn valves to closed
+  
+  //TODO
+  
   //Write current time and emergency message to SD
-  //-scope issue here, as the name of file is not known to this funciton
+  // TODO: check scope on logFile
+  File logFile = SD.open(fileName, FILE_WRITE);
+  if(logFile){
+      
+    logFile.println("Emergency shutdown procedure initiated.");
+        
+    // Print date...
+    //print2digits isn't a library function, but I guess it adds a zero for single digits
+    //I started to write something similar, padDigits function above
+      
+    logFile.padDigits(rtc.getDay()); 
+    logFile.print("/");
+    logFile.padDigits(rtc.getMonth());
+    logFile.print("/");
+    logFile.padDigits(rtc.getYear());
+    logFile.print(" ");
+
+    // Print time
+    logfile.padDigits(rtc.getHours());
+    logFile.print(":");
+    logFile.padDigits(rtc.getMinutes());
+    logFile.print(":");
+    logFile.padDigits(rtc.getSeconds());
+
+    logFile.println();
+    logFile.close();
+    Serial.println("Date and time recorded successfully");
+    
+  }
+  else{
+       Serial.println("error with the file, emergency shutdown initiated.");
+  }
+  
   /*
   while(1){
     //sound alert through speaker
