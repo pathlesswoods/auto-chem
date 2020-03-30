@@ -7,7 +7,7 @@
 #include <RTCZero.h>
 
 //custom libraries
-//#include <ValvePositions.h>
+//#include <ValveControl.h>
 
 //Defines for hardware pins
 //LCD
@@ -38,7 +38,7 @@ const byte month = 2;
 const byte year = 20;
 //SD
 const int chipSelect = 28;
-String fileName = "";
+String fileName = "failed";
 //File logFile;
 //LCD
 LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 20, 4);
@@ -97,6 +97,7 @@ void setup() {
 void loop() {
   switch(state){
     case initial:
+    {
       //initialize LEDs
       //digitalWrite(alertLED, LOW);
       //digitalWrite(runningLED, LOW);
@@ -112,14 +113,16 @@ void loop() {
 
       state = selectParameters;
       break;
-      
+    }
     case selectParameters:
+    {
       //call UI function to get user entered parameters
       
       //open file and write user selected values to it.
-      fileName = "sweet nothings";
-      File logFile = SD.open(fileName, FILE_WRITE);
-      String dataString = "Test";
+      //fileName = "sweet nothings";
+      //File logFile = SD.open(fileName, FILE_WRITE);
+      //String dataString = "Test";
+      /*
       if(logFile){
         logFile.println(dataString);
         logFile.close();
@@ -127,14 +130,16 @@ void loop() {
       }else{
         Serial.println("error with the file");
       }
+      */
 
       //calculate the runtime
       //runtime=
 
       //log the runtime
      
-      state = startProcess;
+      //state = startProcess;
       break;
+    }
     case startProcess:
 
       //set valves to flow reagent position
@@ -169,10 +174,11 @@ void loop() {
       state = initial;
       break;
     case hardwareTesting:
-      //this case is to help trouble shoot hardware
+      //this case is to help trouble-shoot hardware
       break;
     default:
-      //elegantly catch errors  
+      //elegantly catch errors 
+      break; 
   }
   
   //delay for testing purposes
@@ -229,7 +235,7 @@ void doUserInterface(){
   }
 }//end doUserInterface function
 
-
+/*
 void emergencyShutdown(){
   //send command to turn on emergencyLED  
   digitalWrite(alertLED, HIGH);
@@ -288,4 +294,4 @@ void emergencyShutdown(){
   }
   */
   
-}//end emergencyShutdown function
+//}//end emergencyShutdown function
