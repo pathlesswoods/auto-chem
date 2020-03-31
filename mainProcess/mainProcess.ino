@@ -9,7 +9,9 @@
 //custom libraries
 //#include <ValveControl.h>
 
-//Defines for hardware pins
+/*
+ * Definitions for Hardware Pins
+ */
 //LCD
 //Motors <-variables should go in custom library
 //Pumps
@@ -23,11 +25,13 @@
 //const int runningLED = #;
 //const int alertLED = #
 //Buttons
-//const int selectButton = #;
-//const int cancelButton = #;
+const int selectButton = #;
+const int cancelButton = #;
 //const int emergencyButton = #;
 
-// Common Global Variables and Initalizations
+/* 
+ *  Common Global Variables and Initalizations
+ */
 //Real-time
 RTCZero rtc;
 const byte seconds = 0;
@@ -57,13 +61,13 @@ int state = 0;
 //float runtime = 0;
 
 void setup() {
-  //Below establish serial communication for debugging 
+  //**Below establish serial communication for debugging**//
   Serial.begin(9600);
   while(!Serial){
     //gotta wait on the serial port connection
   }
   
-  //setup SD
+  //**Setup SD**//
   Serial.print("Initializing SD card...");
   if(!SD.begin(chipSelect)){
     Serial.println("Card failed, or not present at all");
@@ -72,24 +76,25 @@ void setup() {
   }
   Serial.println("Card initialized. ");
 
-  //set up real-time clock
+  //**Set up real-time clock**//
   rtc.begin();
   rtc.setTime(hours, minutes, seconds);
   rtc.setDate(day, month, year);
 
-  // Initiate the LCD:
-  // lcd.init();
-  // lcd.backlight();
+  //**Initiate the LCD**//
+  lcd.init();
+  lcd.backlight();
 
-  //set up LEDs
+  //**Set up LEDs**//
   //pinMode(alertLED, OUTPUT);
   //pinMode(runningLED, OUTPUT);
 
-  //set up buttons
+  //**Set up buttons**//
   //pinMode(selectButton, INPUT);
 
-  //set up speaker
+  //**Set up speaker**//
   //pinMode(speaker, OUTPUT);
+  
 }//end setup function
 
 
@@ -210,11 +215,15 @@ void doUserInterface(){
   while(true){
     switch(CurrentMenuPage){
       case MenuLanding :
-        //blah blah
+        //display initial LCD message
+        //setCursor(col,row) Both are zero indexed!
+        lcd.setCursor(0,0);
+        lcd.print("Select Parameters");
+        lcd.setCursor(0,3);
+        lcd.print("Select        Cancel");
+        
         while(true){
-          //send the LCD message <-might do this outside switch statement
-          //""
-          //check the values of both buttons
+          //check the value of select button
           //if(button1 || button2){
             //a button had been pressed
             //figure out which button it is and adjust CurrentMenuPage accordingly
