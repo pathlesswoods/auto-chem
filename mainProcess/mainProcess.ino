@@ -25,8 +25,8 @@
 //const int runningLED = #;
 //const int alertLED = #
 //Buttons
-const int selectButton = #;
-const int cancelButton = #;
+//const int selectButton = #;
+//const int cancelButton = #;
 //const int emergencyButton = #;
 
 /* 
@@ -47,7 +47,7 @@ String fileName = "failed";
 //LCD
 LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 20, 4);
 
-//states for the main loop
+// ** states for the main loop ** //
 const int initial = 0;
 const int selectParameters = 1;
 const int calculations = 2;
@@ -59,6 +59,15 @@ const int hardwareTesting = 7;
 
 int state = 0;
 //float runtime = 0;
+
+// ** states for UI ** //
+const int MenuLanding = 0;
+const int SelectFlowOne = 1;
+const int SelectVolumeOne = 2;
+const int ConfirmPumpOne = 3;
+const int SelectFlowTwo = 4;
+const int SelectVolumeTwo = 5;
+const int ConfirmPumpTwo = 6;
 
 void setup() {
   //**Below establish serial communication for debugging**//
@@ -201,19 +210,19 @@ void padDigits(int number){
 
 
 //handle everything the user interacts with (LCD, BUTTONS, POTS)
-void doUserInterface(){
-  const int MenuLanding = 0;
-  const int SelectFlowOne = 1;
-  const int SelectVolumeOne = 2;
-  const int ConfirmPumpOne = 3;
-  const int SelectFlowTwo = 4;
-  const int SelectVolumeTwo = 5;
-  const int ConfirmPumpTwo = 6;
+void doUserInterface(int UIState){
+  //holds current state of buttons
+  int selectButtonState = LOW;
+  int cancelButtonState = LOW;
 
-  int CurrentMenuPage =0;
-
+  //debounce variables
+  int lastSelectButtonState;
+  int lastCancelButtonState;
+  unsigned long lastButtonPress = 0;
+  unsigned long debounce = 50;
+  
   while(true){
-    switch(CurrentMenuPage){
+    switch(UIState){
       case MenuLanding :
         //display initial LCD message
         //setCursor(col,row) Both are zero indexed!
@@ -223,13 +232,20 @@ void doUserInterface(){
         lcd.print("Select        Cancel");
         
         while(true){
-          //check the value of select button
-          //if(button1 || button2){
-            //a button had been pressed
-            //figure out which button it is and adjust CurrentMenuPage accordingly
-            //also need to save current value being set.
-          //}
-          //
+          //check select button
+          //selectButtonState=digitalRead(selectButton);
+
+          //state of button changed, reset debounce timer
+          if(lastSelectButtonState!=selectButtonState){
+            lastButtonPress = millis();
+          }
+
+          //if select has been pressed
+          if(millis()-lastButtonPress>debounce){
+            //change UI state to next menu
+            UIState = SelectFlowOne;
+            break;
+          }
         }
         break;
       case SelectFlowOne :
