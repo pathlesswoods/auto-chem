@@ -25,8 +25,8 @@
 //const int runningLED = #;
 //const int alertLED = #
 //Buttons
-//const int selectButton = #;
-//const int cancelButton = #;
+const int selectButton = 7;
+const int cancelButton = 6;
 //const int emergencyButton = #;
 
 /* 
@@ -48,6 +48,7 @@ String fileName = "failed";
 LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 20, 4);
 
 // ** states for the main loop ** //
+int state = 7;
 const int initial = 0;
 const int selectParameters = 1;
 const int calculations = 2;
@@ -57,7 +58,6 @@ const int stopProcess = 5;
 const int cleanUpProcess = 6;
 const int hardwareTesting = 7;
 
-int state = 0;
 //float runtime = 0;
 
 // ** states for UI ** //
@@ -109,7 +109,10 @@ void setup() {
 
 //main loop
 void loop() {
+  
   switch(state){
+
+    //** Initialize everything needed **//
     case initial:
     {
       //initialize LEDs
@@ -131,6 +134,7 @@ void loop() {
     case selectParameters:
     {
       //call UI function to get user entered parameters
+      doUserInterface(MenuLanding);
       
       //open file and write user selected values to it.
       //fileName = "sweet nothings";
@@ -187,8 +191,11 @@ void loop() {
       //Set valves to closed.
       state = initial;
       break;
+
+    //** Test and Trouble-Shoot Hardware **//
     case hardwareTesting:
-      //this case is to help trouble-shoot hardware
+      Serial.print("Accessing Menu...");
+      doUserInterface(MenuLanding);
       break;
     default:
       //elegantly catch errors 
@@ -209,23 +216,30 @@ void padDigits(int number){
 }//end padDigits function
 
 
-//handle everything the user interacts with (LCD, BUTTONS, POTS)
+//Handle everything the user interacts with (LCD, BUTTONS, POTS)
+//Inputs: an integer representing the UI state to initially enter
+//Outputs: none
 void doUserInterface(int UIState){
   //holds current state of buttons
   int selectButtonState = LOW;
   int cancelButtonState = LOW;
+  int lastSelectButtonState = LOW;
+  int lastCancelButtonState = LOW;
+  int readingSelectButton;
+  int readingCancelButton;
 
   //debounce variables
-  int lastSelectButtonState;
-  int lastCancelButtonState;
-  unsigned long lastButtonPress = 0;
-  unsigned long debounce = 50;
+  unsigned long lastSelectButtonPress = 0;
+  unsigned long lastCancelButtonPress = 0;
+  unsigned long debounceTime = 50;
   
   while(true){
+    
     switch(UIState){
+      
+      // ** Initial LCD Screen ** //
       case MenuLanding :
         //display initial LCD message
-        //setCursor(col,row) Both are zero indexed!
         lcd.setCursor(0,0);
         lcd.print("Select Parameters");
         lcd.setCursor(0,3);
@@ -233,22 +247,36 @@ void doUserInterface(int UIState){
         
         while(true){
           //check select button
-          //selectButtonState=digitalRead(selectButton);
+          readingSelectButton=digitalRead(selectButton);
 
           //state of button changed, reset debounce timer
-          if(lastSelectButtonState!=selectButtonState){
-            lastButtonPress = millis();
+          if(lastSelectButtonState!=readingSelectButton){
+            lastSelectButtonPress = millis();
           }
 
-          //if select has been pressed
-          if(millis()-lastButtonPress>debounce){
-            //change UI state to next menu
-            UIState = SelectFlowOne;
-            break;
+          //Make sure waited for debounce delay
+          if(millis()-lastSelectButtonPress>debounceTime){
+            //Want this action to happen only once per button press
+            if(readingSelectButton!=selectButtonState){
+               selectButtonState = readingSelectButton;
+               //only do something if the button is pressed
+               if(selectButtonState = HIGH){
+                  //change state to SelectFlowOne
+                  UIState = SelectFlowOne;
+                  break;
+               }
+            }
           }
+          lastSelectButtonState = readingSelectButton;
         }
         break;
+
+      //** Menu Page to Select Flow for Pump One **//
       case SelectFlowOne :
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Success! :D");
+        delay(5000);
         //blah blah
         break;
       case SelectVolumeOne :
