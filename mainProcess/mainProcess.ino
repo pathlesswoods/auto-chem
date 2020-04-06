@@ -68,6 +68,7 @@ const int ConfirmPumpOne = 3;
 const int SelectFlowTwo = 4;
 const int SelectVolumeTwo = 5;
 const int ConfirmPumpTwo = 6;
+const int ExitMenu = 7;
 
 void setup() {
   //**Below establish serial communication for debugging**//
@@ -240,10 +241,10 @@ void doUserInterface(int UIState){
       // ** Initial LCD Screen ** //
       case MenuLanding :
         //display initial LCD message
-        lcd.setCursor(0,0);
-        lcd.print("Select Parameters");
+        lcd.setCursor(1,1);
+        lcd.print("Choose Parameters?");
         lcd.setCursor(0,3);
-        lcd.print("Select        Cancel");
+        lcd.print("Select");
         
         while(true){
           //check select button
@@ -269,19 +270,123 @@ void doUserInterface(int UIState){
           }
           lastSelectButtonState = readingSelectButton;
         }
+        lcd.clear();
         break;
 
       //** Menu Page to Select Flow for Pump One **//
       case SelectFlowOne :
+        //display initial LCD message
+        lcd.setCursor(3,0);
+        lcd.print("Select Flow for");
+        lcd.setCursor(6,1);
+        lcd.print("Pump One");
+        lcd.setCursor(6,2);
+        lcd.print("0000");
+        lcd.setCursor(0,3);
+        lcd.print("Select        Cancel");
+
+        
+        while(true){
+          
+        }
+   
         lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.print("Success! :D");
-        delay(5000);
-        //blah blah
         break;
+
+      //** Menu Page to Select Volume for Pump One **//
       case SelectVolumeOne :
+        lcd.setCursor(0,0);
+        lcd.print("Select Volume for");
+        lcd.setCursor(6,1);
+        lcd.print("Pump One");
+        lcd.setCursor(6,2);
+        lcd.print("0000");
+        lcd.setCursor(0,3);
+        lcd.print("Select        Cancel");
+        
         //blah blah
+        
+        lcd.clear();
         break;
+
+      //** Menu Page to Confirm Chosen Volume and Flow for Pump One **//
+      case ConfirmPumpOne :
+        lcd.setCursor(0,0);
+        lcd.print("Confirm Pump1 Values");
+        lcd.setCursor(4,1);
+        lcd.print("Flow");
+        //display flow
+        //lcd.Cursor(9,1);
+        //lcd.print(Pump1Flow)
+        lcd.setCursor(2,2);
+        lcd.print("Volume");
+        //display volume
+        //lcd.Cursor(10,2);
+        //lcd.print(Pump1Flow)
+        lcd.setCursor(0,3);
+        lcd.print("Select        Cancel");
+
+        //do your button thing
+
+        lcd.clear();
+        break;
+      //** Menu Page to Select Flow for Pump Two *//
+      case SelectFlowTwo :
+        lcd.setCursor(0,0);
+        lcd.print("Select Flow for");
+        lcd.setCursor(6,1);
+        lcd.print("Pump Two");
+        lcd.setCursor(6,2);
+        lcd.print("0000");
+        lcd.setCursor(0,3);
+        lcd.print("Select        Cancel");
+
+        //blah blah
+        
+        lcd.clear();
+        break;
+
+      //** Menu Page to Select Volume for Pump Two *//
+      case SelectVolumeTwo :
+        lcd.setCursor(0,0);
+        lcd.print("Select Volume for");
+        lcd.setCursor(6,1);
+        lcd.print("Pump Two");
+        lcd.setCursor(6,2);
+        lcd.print("0000");
+        lcd.setCursor(0,3);
+        lcd.print("Select        Cancel");
+
+        //blah blah 
+        
+        lcd.clear();
+        break;
+
+      //** Menu Page to Confirm Flow and Volume for Pump Two **//
+      case ConfirmPumpTwo :
+        lcd.setCursor(0,0);
+        lcd.print("Confirm Pump2 Values");
+        lcd.setCursor(4,1);
+        lcd.print("Flow");
+        //display flow
+        //lcd.Cursor(9,1);
+        //lcd.print(Pump2Flow)
+        lcd.setCursor(2,2);
+        lcd.print("Volume");
+        //display volume
+        //lcd.Cursor(10,2);
+        //lcd.print(Pump2Flow)
+        lcd.setCursor(0,3);
+        lcd.print("Select        Cancel");
+
+        //do your button thing
+
+        lcd.clear();
+        break;
+      //** Menu Exit Page**//
+      case ExitMenu : 
+        //this is more a nice to have for the user
+        
       default :
         break;
     }
