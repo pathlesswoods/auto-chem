@@ -287,9 +287,49 @@ void doUserInterface(int UIState){
 
         
         while(true){
+          //get button and potentiometer status
+          readingSelectButton=digitalRead(selectButton);
+          readingCancelButton=digitalRead(cancelButton);
+
+          //display potentiometer readings to LCD
+          //might want to make this a thing that happens on chance
+          //lcd can't keep up with the frequency of writes, dims
+
+          //check state of buttons changed, reset debounce timer
+          if(lastSelectButtonState!=readingSelectButton){
+            lastSelectButtonPress = millis();
+          }else if(lastCancelButtonState!=readingCancelButton){
+            lastCancelButtonPress = millis();
+          }
           
+          //Make sure waited for debounce delay
+          if(millis()-lastSelectButtonPress>debounceTime){
+            //Want this action to happen only once per select button press
+            if(readingSelectButton!=selectButtonState){
+               selectButtonState = readingSelectButton;
+               //only do something if the button is pressed
+               if(selectButtonState = HIGH){
+                  //change state to SelectFlowOne
+                  //save the values from the potentiometers for flowOne
+                  UIState = SelectVolumeOne;
+                  break;
+               }
+            }
+          }
+          if(millis()-lastCancelButtonPress>debounceTime){
+            //Want this action to happen only once per cancel button press
+            if(readingCancelButton!=cancelButtonState){
+               cancelButtonState = readingCancelButton;
+               //only do something if the button is pressed
+               if(cancelButtonState = HIGH){
+                  //go to menu landing state
+                  UIState = MenuLanding;
+                  break;
+               }
+            }
+          }
+          lastSelectButtonState = readingSelectButton;
         }
-   
         lcd.clear();
         break;
 
