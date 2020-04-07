@@ -19,8 +19,8 @@
 //const int speaker = #;
 //SD
 //Potentiometers
-//const int coarsePot = #;
-//const int finePot = #;
+const int coarsePot = A1;
+const int finePot = A2;
 //LEDS
 //const int runningLED = #;
 //const int alertLED = #
@@ -292,7 +292,7 @@ void doUserInterface(int UIState){
           readingCancelButton=digitalRead(cancelButton);
 
           //display potentiometer readings to LCD
-          //might want to make this a thing that happens on chance
+          //might want to make this a thing that happens on change
           //lcd can't keep up with the frequency of writes, dims
 
           //check state of buttons changed, reset debounce timer
@@ -302,7 +302,7 @@ void doUserInterface(int UIState){
             lastCancelButtonPress = millis();
           }
           
-          //Make sure waited for debounce delay
+          //Make sure waited for debounce delay on select button
           if(millis()-lastSelectButtonPress>debounceTime){
             //Want this action to happen only once per select button press
             if(readingSelectButton!=selectButtonState){
@@ -316,6 +316,8 @@ void doUserInterface(int UIState){
                }
             }
           }
+
+          //make sure waited debounce delay on cancel button
           if(millis()-lastCancelButtonPress>debounceTime){
             //Want this action to happen only once per cancel button press
             if(readingCancelButton!=cancelButtonState){
@@ -493,3 +495,82 @@ void emergencyShutdown(){
   */
   
 //}//end emergencyShutdown function
+
+
+//** Inputs: Address for value to be chosen **//
+//** Returns: Integer value of Select = 1, Cancel = 0 **//
+int captureInput(int* chosenValue){
+  
+  //holds state of buttons and pots
+  int selectButtonState = LOW;
+  int cancelButtonState = LOW;
+  int lastSelectButtonState = LOW;
+  int lastCancelButtonState = LOW;
+  int readingSelectButton;
+  int readingCancelButton;
+  int readingCoarsePot;
+  int readingFinePot;
+
+  //holds calculated value based on two pots
+  int tempFinePot;
+  int tempCoarsePot;
+  int value;
+
+  //debounce variables
+  unsigned long lastSelectButtonPress = 0;
+  unsigned long lastCancelButtonPress = 0;
+  unsigned long debounceTime = 50;
+
+  
+  while(true){
+    //get button and potentiometer status
+    readingSelectButton=digitalRead(selectButton);
+    readingCancelButton=digitalRead(cancelButton);
+
+    //display potentiometer readings to LCD
+    //might want to make this a thing that happens on change
+    //lcd can't keep up with the frequency of writes, dims
+    //assumes 12 bit resolution
+    tempCoarsePot = map(analogRead(coarsePot), 0, 4095, 0, 400);
+    tempFinePot = map(analogRead(finePot), 0, 4095, 0, 9); 
+    value = (tempCoarsePot*10) + tempFinePot;
+    lcd.setCursor(6,2);
+    lcd.print(value);
+
+    //check state of buttons changed, reset debounce timer
+    if(lastSelectButtonState!=readingSelectButton){
+      lastSelectButtonPress = millis();
+    }else if(lastCancelButtonState!=readingCancelButton){
+      lastCancelButtonPress = millis();
+    }
+    
+    //Make sure waited for debounce delay on select button
+    if(millis()-lastSelectButtonPress>debounceTime){
+      //Want this action to happen only once per select button press
+      if(readingSelectButton!=selectButtonState){
+         selectButtonState = readingSelectButton;
+         //only do something if the button is pressed
+         if(selectButtonState = HIGH){
+            //change state to SelectFlowOne
+            //save the values for chosenOne
+            //chosenValue = value;
+            return 1;
+         }
+      }
+    }
+
+    //make sure waited debounce delay on cancel button
+    if(millis()-lastCancelButtonPress>debounceTime){
+      //Want this action to happen only once per cancel button press
+      if(readingCancelButton!=cancelButtonState){
+         cancelButtonState = readingCancelButton;
+         //only do something if the button is pressed
+         if(cancelButtonState = HIGH){
+            //go to menu landing state
+            return 0;
+         }
+      }
+    }
+    lastSelectButtonState = readingSelectButton;
+  }
+}//end captureInput() function
