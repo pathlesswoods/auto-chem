@@ -70,6 +70,12 @@ const int SelectVolumeTwo = 5;
 const int ConfirmPumpTwo = 6;
 const int ExitMenu = 7;
 
+//Runtime Variables
+int flowOne;
+int flowTwo;
+int volumeOne;
+int VolumeTwo;
+
 void setup() {
   //**Below establish serial communication for debugging**//
   Serial.begin(9600);
@@ -102,6 +108,10 @@ void setup() {
   //**Set up buttons**//
   //pinMode(selectButton, INPUT);
 
+  //**Set up potentiometers **//
+  pinMode(coarsePot, INPUT);
+  pinMode(finePot, INPUT);
+
   //**Set up speaker**//
   //pinMode(speaker, OUTPUT);
   
@@ -110,7 +120,7 @@ void setup() {
 
 //main loop
 void loop() {
-  
+  analogReadResolution(12);
   switch(state){
 
     //** Initialize everything needed **//
@@ -195,16 +205,32 @@ void loop() {
 
     //** Test and Trouble-Shoot Hardware **//
     case hardwareTesting:
-      Serial.print("Accessing Menu...");
-      doUserInterface(MenuLanding);
+    {
+      //Serial.print("Accessing Menu...");
+      //doUserInterface(MenuLanding);
+      
+      Serial.print("Testing coarse pot...\n");
+      int tempCoarsePot = map(analogRead(coarsePot), 0, 4095, 0, 400);
+      //int tempFinePot = map(analogRead(finePot), 0, 4095, 0, 9); 
+      //int value = (tempCoarsePot*10) + tempFinePot;
+      //catch overflow from adding finePot if coarsePot is maxed out
+      Serial.print("\ncoarsePot=\n");
+      Serial.print(analogRead(coarsePot));
+      //Serial.print("\nfinePot=\n");
+      //Serial.print(analogRead(finePot));
+      //lcd.clear();
+      //lcd.setCursor(6,2);
+      //lcd.print(value);
+    }
       break;
+      
+    //** Elegantly catch errors **//
     default:
-      //elegantly catch errors 
       break; 
   }
   
   //delay for testing purposes
-  delay(5000);
+  delay(1000);
   
 }//end main loop function
 
@@ -216,7 +242,7 @@ void padDigits(int number){
   }
 }//end padDigits function
 
-
+//** doUserInterface Function **//
 //Handle everything the user interacts with (LCD, BUTTONS, POTS)
 //Inputs: an integer representing the UI state to initially enter
 //Outputs: none
@@ -255,7 +281,7 @@ void doUserInterface(int UIState){
             lastSelectButtonPress = millis();
           }
 
-          //Make sure waited for debounce delay
+          //Make sure debounce delay has happened
           if(millis()-lastSelectButtonPress>debounceTime){
             //Want this action to happen only once per button press
             if(readingSelectButton!=selectButtonState){
@@ -280,12 +306,15 @@ void doUserInterface(int UIState){
         lcd.print("Select Flow for");
         lcd.setCursor(6,1);
         lcd.print("Pump One");
-        lcd.setCursor(6,2);
-        lcd.print("0000");
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
 
         //call captureInputs function
+        if(captureInput(&flowOne)){
+          UIState = SelectVolumeOne;
+        }else{
+          UIState = MenuLanding;
+        }
         
         lcd.clear();
         break;
@@ -485,10 +514,14 @@ int captureInput(int* chosenValue){
     //display potentiometer readings to LCD
     //might want to make this a thing that happens on change
     //lcd can't keep up with the frequency of writes, dims
-    //assumes 12 bit resolution
+    //assumes 12 bit resolution on pins
     tempCoarsePot = map(analogRead(coarsePot), 0, 4095, 0, 400);
     tempFinePot = map(analogRead(finePot), 0, 4095, 0, 9); 
     value = (tempCoarsePot*10) + tempFinePot;
+    //catch overflow from adding finePot if coarsePot is maxed out
+    if(value>4000){
+      value=4000;
+    }
     lcd.setCursor(6,2);
     lcd.print(value);
 
@@ -506,9 +539,8 @@ int captureInput(int* chosenValue){
          selectButtonState = readingSelectButton;
          //only do something if the button is pressed
          if(selectButtonState = HIGH){
-            //change state to SelectFlowOne
-            //save the values for chosenOne
-            //chosenValue = value;
+            //save the values for chosenValue for reference outside this function
+            *chosenValue = value;
             return 1;
          }
       }
@@ -527,5 +559,6 @@ int captureInput(int* chosenValue){
       }
     }
     lastSelectButtonState = readingSelectButton;
+    lastCancelButtonState = readingCancelButton;
   }
 }//end captureInput() function
