@@ -74,23 +74,23 @@ const int ExitMenu = 7;
 int flowOne;
 int flowTwo;
 int volumeOne;
-int VolumeTwo;
+int volumeTwo;
 
 void setup() {
-  //**Below establish serial communication for debugging**//
+  //**Establish serial communication for debugging**//
   Serial.begin(9600);
   while(!Serial){
     //gotta wait on the serial port connection
   }
   
   //**Setup SD**//
-  Serial.print("Initializing SD card...");
+  Serial.print("Initializing SD card...\n");
   if(!SD.begin(chipSelect)){
-    Serial.println("Card failed, or not present at all");
+    Serial.println("Card failed, or not present at all\n");
     //don't do anything more
     while(true);
   }
-  Serial.println("Card initialized. ");
+  Serial.println("Card initialized. \n");
 
   //**Set up real-time clock**//
   rtc.begin();
@@ -107,6 +107,8 @@ void setup() {
 
   //**Set up buttons**//
   //pinMode(selectButton, INPUT);
+  //pinMode(cancelButton, INPUT);
+  //pinMode(emergencyButton, INPUT);
 
   //**Set up potentiometers **//
   pinMode(coarsePot, INPUT);
@@ -120,7 +122,9 @@ void setup() {
 
 //main loop
 void loop() {
+  //Allow 12 bit resolution on analog pins
   analogReadResolution(12);
+  
   switch(state){
 
     //** Initialize everything needed **//
@@ -162,6 +166,7 @@ void loop() {
       */
 
       //calculate the runtime
+      //millileters per minute
       //runtime=
 
       //log the runtime
@@ -271,31 +276,12 @@ void doUserInterface(int UIState){
         lcd.print("Choose Parameters?");
         lcd.setCursor(0,3);
         lcd.print("Select");
-        
-        while(true){
-          //check select button
-          readingSelectButton=digitalRead(selectButton);
 
-          //state of button changed, reset debounce timer
-          if(lastSelectButtonState!=readingSelectButton){
-            lastSelectButtonPress = millis();
-          }
-
-          //Make sure debounce delay has happened
-          if(millis()-lastSelectButtonPress>debounceTime){
-            //Want this action to happen only once per button press
-            if(readingSelectButton!=selectButtonState){
-               selectButtonState = readingSelectButton;
-               //only do something if the button is pressed
-               if(selectButtonState = HIGH){
-                  //change state to SelectFlowOne
-                  UIState = SelectFlowOne;
-                  break;
-               }
-            }
-          }
-          lastSelectButtonState = readingSelectButton;
+        //if select, then go to next menu page, otherwise do nothing
+        if(captureButtons()){
+          state = SelectFlowOne;
         }
+        
         lcd.clear();
         break;
 
@@ -330,7 +316,14 @@ void doUserInterface(int UIState){
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
         
-        //blah blah
+        //call captureInputs function
+        if(captureInput(&volumeOne)){
+          //if Select pushed, on to next menu page
+          UIState = ConfirmPumpOne;
+        }else{
+          //else cancel pushed, back a state
+          UIState = SelectVolumeOne;
+        }
         
         lcd.clear();
         break;
@@ -342,32 +335,41 @@ void doUserInterface(int UIState){
         lcd.setCursor(4,1);
         lcd.print("Flow");
         //display flow
-        //lcd.Cursor(9,1);
-        //lcd.print(Pump1Flow)
+        lcd.setCursor(9,1);
+        lcd.print(flowOne);
         lcd.setCursor(2,2);
         lcd.print("Volume");
         //display volume
-        //lcd.Cursor(10,2);
-        //lcd.print(Pump1Flow)
+        lcd.setCursor(10,2);
+        lcd.print(volumeOne);
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
 
-        //do your button thing
+        //if select, then carry on with menu, else go back
+        if(captureButtons()){
+          state = SelectFlowTwo;
+        }else{
+          state = SelectFlowOne;
+        }
 
         lcd.clear();
         break;
+        
       //** Menu Page to Select Flow for Pump Two *//
       case SelectFlowTwo :
         lcd.setCursor(0,0);
         lcd.print("Select Flow for");
         lcd.setCursor(6,1);
         lcd.print("Pump Two");
-        lcd.setCursor(6,2);
-        lcd.print("0000");
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
 
-        //blah blah
+        //if press select, then continue with menu, else go back
+        if(captureInput(&flowTwo)){
+          state = SelectVolumeTwo;
+        }else{
+          state = ConfirmPumpOne;
+        }
         
         lcd.clear();
         break;
@@ -383,7 +385,12 @@ void doUserInterface(int UIState){
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
 
-        //blah blah 
+        //if select pressed, continue menu flow, otherwise go back
+        if(captureInput(&volumeTwo)){
+          state = ConfirmPumpTwo;
+        }else{
+          state = SelectFlowTwo;
+        }
         
         lcd.clear();
         break;
@@ -395,24 +402,29 @@ void doUserInterface(int UIState){
         lcd.setCursor(4,1);
         lcd.print("Flow");
         //display flow
-        //lcd.Cursor(9,1);
-        //lcd.print(Pump2Flow)
+        lcd.setCursor(9,1);
+        lcd.print(flowTwo);
         lcd.setCursor(2,2);
         lcd.print("Volume");
         //display volume
-        //lcd.Cursor(10,2);
-        //lcd.print(Pump2Flow)
+        lcd.setCursor(10,2);
+        lcd.print(volumeTwo);
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
 
-        //do your button thing
+        //if select pressed, continue on with menu, otherwise go back
+        if(captureButtons()){
+          state = ExitMenu;
+        }else{
+          state = SelectFlowTwo;
+        }
 
         lcd.clear();
         break;
       //** Menu Exit Page**//
       case ExitMenu : 
         //this is more a nice to have for the user
-        
+        return;
       default :
         break;
     }
@@ -562,3 +574,59 @@ int captureInput(int* chosenValue){
     lastCancelButtonState = readingCancelButton;
   }
 }//end captureInput() function
+
+
+int captureButtons(){
+  
+  //holds state of buttons and pots
+  int selectButtonState = LOW;
+  int cancelButtonState = LOW;
+  int lastSelectButtonState = LOW;
+  int lastCancelButtonState = LOW;
+  int readingSelectButton;
+  int readingCancelButton;
+
+  //debounce variables
+  unsigned long lastSelectButtonPress = 0;
+  unsigned long lastCancelButtonPress = 0;
+  unsigned long debounceTime = 50;
+
+  while(true){
+    //get button and potentiometer status
+    readingSelectButton=digitalRead(selectButton);
+    readingCancelButton=digitalRead(cancelButton);
+
+    //check state of buttons changed, reset debounce timer
+    if(lastSelectButtonState!=readingSelectButton){
+      lastSelectButtonPress = millis();
+    }else if(lastCancelButtonState!=readingCancelButton){
+      lastCancelButtonPress = millis();
+    }
+    
+    //Make sure waited for debounce delay on select button
+    if(millis()-lastSelectButtonPress>debounceTime){
+      //Want this action to happen only once per select button press
+      if(readingSelectButton!=selectButtonState){
+         selectButtonState = readingSelectButton;
+         //only do something if the button is pressed
+         if(selectButtonState = HIGH){
+            return 1;
+         }
+      }
+    }
+
+    //make sure waited debounce delay on cancel button
+    if(millis()-lastCancelButtonPress>debounceTime){
+      //Want this action to happen only once per cancel button press
+      if(readingCancelButton!=cancelButtonState){
+         cancelButtonState = readingCancelButton;
+         //only do something if the button is pressed
+         if(cancelButtonState = HIGH){
+            return 0;
+         }
+      }
+    }
+    lastSelectButtonState = readingSelectButton;
+    lastCancelButtonState = readingCancelButton;
+  }
+}//end captureButtons()
