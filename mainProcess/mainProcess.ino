@@ -279,7 +279,7 @@ void doUserInterface(int UIState){
 
         //if select, then go to next menu page, otherwise do nothing
         if(captureButtons()){
-          state = SelectFlowOne;
+          UIState = SelectFlowOne;
         }
         
         lcd.clear();
@@ -347,9 +347,9 @@ void doUserInterface(int UIState){
 
         //if select, then carry on with menu, else go back
         if(captureButtons()){
-          state = SelectFlowTwo;
+          UIState = SelectFlowTwo;
         }else{
-          state = SelectFlowOne;
+          UIState = SelectFlowOne;
         }
 
         lcd.clear();
@@ -366,9 +366,9 @@ void doUserInterface(int UIState){
 
         //if press select, then continue with menu, else go back
         if(captureInput(&flowTwo)){
-          state = SelectVolumeTwo;
+          UIState = SelectVolumeTwo;
         }else{
-          state = ConfirmPumpOne;
+          UIState = ConfirmPumpOne;
         }
         
         lcd.clear();
@@ -387,9 +387,9 @@ void doUserInterface(int UIState){
 
         //if select pressed, continue menu flow, otherwise go back
         if(captureInput(&volumeTwo)){
-          state = ConfirmPumpTwo;
+          UIState = ConfirmPumpTwo;
         }else{
-          state = SelectFlowTwo;
+          UIState = SelectFlowTwo;
         }
         
         lcd.clear();
@@ -414,16 +414,16 @@ void doUserInterface(int UIState){
 
         //if select pressed, continue on with menu, otherwise go back
         if(captureButtons()){
-          state = ExitMenu;
+          UIState = ExitMenu;
         }else{
-          state = SelectFlowTwo;
+          UIState = SelectFlowTwo;
         }
 
         lcd.clear();
         break;
       //** Menu Exit Page**//
       case ExitMenu : 
-        //this is more a nice to have for the user
+        //clearly exit menu
         return;
       default :
         break;
