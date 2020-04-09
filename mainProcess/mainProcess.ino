@@ -58,8 +58,6 @@ const int stopProcess = 5;
 const int cleanUpProcess = 6;
 const int hardwareTesting = 7;
 
-//float runtime = 0;
-
 // ** states for UI ** //
 const int MenuLanding = 0;
 const int SelectFlowOne = 1;
@@ -69,12 +67,18 @@ const int SelectFlowTwo = 4;
 const int SelectVolumeTwo = 5;
 const int ConfirmPumpTwo = 6;
 const int ExitMenu = 7;
+const int PrimePumps = 8;
+const int ProcessRunning = 9;
+const int ConfirmEndProcess = 10;
+const int ConfirmClearedLines = 11;
 
 //Runtime Variables
 int flowOne;
 int flowTwo;
 int volumeOne;
 int volumeTwo;
+
+float runtime = 0;
 
 void setup() {
   //**Establish serial communication for debugging**//
@@ -106,8 +110,8 @@ void setup() {
   //pinMode(runningLED, OUTPUT);
 
   //**Set up buttons**//
-  //pinMode(selectButton, INPUT);
-  //pinMode(cancelButton, INPUT);
+  pinMode(selectButton, INPUT);
+  pinMode(cancelButton, INPUT);
   //pinMode(emergencyButton, INPUT);
 
   //**Set up potentiometers **//
@@ -154,12 +158,16 @@ void loop() {
       doUserInterface(MenuLanding);
 
       //calculate the runtime
-      //millileters per minute
-      //runtime=
-
-      //log the runtime
+      //millileters per minute for flowrate of pumps
+      float tempRunTimeOne = volumeOne/flowOne;
+      float tempRunTimeTwo = volumeTwo/flowTwo;
+      if(tempRunTimeOne>tempRunTimeTwo){
+        runtime = tempRunTimeOne;
+      }else{
+        runtime = tempRunTimeTwo;
+      }
       
-      //open file and write user selected values to it.
+      //open file and write user selected values and runtime to it.
       logfile = SD.open(fileName, FILE_WRITE);
       if(logfile){
         logfile.println("User selected the following parameters: \n");
@@ -171,6 +179,8 @@ void loop() {
         logfile.println(flowTwo);
         logfile.println("\nPump Two Volume: \n");
         logfile.println(volumeTwo);
+        logfile.println("Calculated runtime is: \n");
+        logfile.println(runtime);
         logfile.close();
       }else{
         Serial.println("Error with the file");
@@ -187,36 +197,79 @@ void loop() {
       //set valves to flow reagent position
 
       //call UI function to ask user to prime pumps
+      doUserInterface(PrimePumps);
 
       //command pump to turn on/start pump
+      
 
       //Log the time the process started
+      logfile = SD.open(fileName, FILE_WRITE);
+      if(logfile){
+        logfile.println("Process started at: ");
+        logfile.println();
+        String minutesDec = String(minutes, DEC);
+        String hoursDec = String(hours, DEC);
+        String dayDec = String(day, DEC);
+        String monthDec = String(month, DEC);
+        String currentDateTime = String(monthDec + "/" + dayDec + " " + hoursDec + ":" + minutesDec);
+        logfile.println(currentDateTime);
+        logfile.close();
+      }else{
+        Serial.println("Error with the file");
+        //queue emergency shutdown?
+      }
       
       state = processRunning;
       break;
+
+    //** Process Running **//
     case processRunning:
       //run for alloted time
+      //periodically check pumps feedback for errors
+      //check flag for errors during this time
       state = stopProcess;
       break;
+      
     case stopProcess:
+    {
       //command pump to turn off/stop pump
-  
-      //log the end time
+ 
+      //Log the time the process ended
+      logfile = SD.open(fileName, FILE_WRITE);
+      if(logfile){
+        logfile.println("Process ended at: ");
+        logfile.println();
+        String minutesDec = String(minutes, DEC);
+        String hoursDec = String(hours, DEC);
+        String dayDec = String(day, DEC);
+        String monthDec = String(month, DEC);
+        String currentDateTime = String(monthDec + "/" + dayDec + " " + hoursDec + ":" + minutesDec);
+        logfile.println(currentDateTime);
+        logfile.close();
+      }else{
+        Serial.println("Error with the file");
+        //queue emergency shutdown?
+      }
 
       //Call UI to ask user if done.
-      
+      doUserInterface(ConfirmEndProcess);
+    
       state = cleanUpProcess;
       break;
+    }
     case cleanUpProcess:
       //Set valves to flow inert gas to clear the lines
 
       //Call UI to ask user if done clearing the lines.
+      doUserInterface(ConfirmClearedLines);
 
       //Set valves to closed.
+
+      
       state = initial;
       break;
 
-    //** Test and Trouble-Shoot Hardware **//
+    //** Test and Troubleshoot Hardware **//
     case hardwareTesting:
     {
       //Serial.print("Accessing Menu...");
@@ -433,6 +486,66 @@ void doUserInterface(int UIState){
       case ExitMenu : 
         //clearly exit menu
         return;
+
+      case PrimePumps :
+        lcd.setCursor(0,0);
+        lcd.print("Please prime pumps.");
+        lcd.setCursor(0,1);
+        lcd.print("Please press select when done");
+        lcd.setCursor(0,3);
+        lcd.print("Select");
+
+        //if select pressed, move to process running display
+        if(captureButtons()){
+          UIState = ProcessRunning;
+        }
+
+        lcd.clear();
+        break;
+
+      //** Display Process Running to LCD **//
+      case ProcessRunning :
+        lcd.setCursor(0,2);
+        lcd.print("Process running...");
+        return;
+
+        break;
+
+      //** Confirm the Process Has Finished **//
+      case ConfirmEndProcess : 
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Please confirm");
+        lcd.setCursor(0,1);
+        lcd.print("process has ended.");
+        lcd.setCursor(0,3);
+        lcd.print("Select");
+
+        //if select pressed, move to process running display
+        if(captureButtons()){
+          lcd.clear();
+          return;
+        }
+
+        break;
+
+      //** Confirm Lines are Clear **//
+      case ConfirmClearedLines :
+        lcd.setCursor(0,0);
+        lcd.print("Please confirm");
+        lcd.setCursor(0,1);
+        lcd.print("lines are cleared.");
+        lcd.setCursor(0,3);
+        lcd.print("Select");
+
+        //if select pressed, return to main loop
+        if(captureButtons()){
+          lcd.clear();
+          return;
+        }
+        
+        break; 
+        
       default :
         break;
     }
