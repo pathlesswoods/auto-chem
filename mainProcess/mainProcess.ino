@@ -35,10 +35,10 @@ const int cancelButton = 6;
 //Real-time
 RTCZero rtc;
 const byte seconds = 0;
-const byte minutes = 16;
+const byte minutes = 24;
 const byte hours = 14;
-const byte day = 27;
-const byte month = 2;
+const byte day = 9;
+const byte month = 4;
 const byte year = 20;
 //SD
 const int chipSelect = 28;
@@ -113,6 +113,7 @@ void setup() {
   pinMode(selectButton, INPUT);
   pinMode(cancelButton, INPUT);
   //pinMode(emergencyButton, INPUT);
+  //attachInterrupt(digitalPinToInterrupt(emergencyButton), emergencyShutdown,HIGH);
 
   //**Set up potentiometers **//
   pinMode(coarsePot, INPUT);
