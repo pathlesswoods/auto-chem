@@ -43,7 +43,7 @@ const byte year = 20;
 //SD
 const int chipSelect = 28;
 String fileName = "failed";
-//File logFile;
+File logfile;
 //LCD
 LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 20, 4);
 
@@ -146,34 +146,42 @@ void loop() {
       state = selectParameters;
       break;
     }
+
+    //** Select Runtime Parameters **//
     case selectParameters:
     {
       //call UI function to get user entered parameters
       doUserInterface(MenuLanding);
-      
-      //open file and write user selected values to it.
-      //fileName = "sweet nothings";
-      //File logFile = SD.open(fileName, FILE_WRITE);
-      //String dataString = "Test";
-      /*
-      if(logFile){
-        logFile.println(dataString);
-        logFile.close();
-        Serial.println(dataString);
-      }else{
-        Serial.println("error with the file");
-      }
-      */
 
       //calculate the runtime
       //millileters per minute
       //runtime=
 
       //log the runtime
-     
-      //state = startProcess;
+      
+      //open file and write user selected values to it.
+      logfile = SD.open(fileName, FILE_WRITE);
+      if(logfile){
+        logfile.println("User selected the following parameters: \n");
+        logfile.println("Pump One Flow: \n");
+        logfile.println(flowOne);
+        logfile.println("\nPump One Volume: \n");
+        logfile.println(volumeOne);
+        logfile.println("\nPump Two Flow: \n");
+        logfile.println(flowTwo);
+        logfile.println("\nPump Two Volume: \n");
+        logfile.println(volumeTwo);
+        logfile.close();
+      }else{
+        Serial.println("Error with the file");
+        //queue emergency shutdown?
+      }
+
+      state = startProcess;
       break;
     }
+
+    //** Process Startup **//
     case startProcess:
 
       //set valves to flow reagent position
