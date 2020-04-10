@@ -15,6 +15,10 @@
 //LCD
 //Motors <-variables should go in custom library
 //Pumps
+//const int P1CTL = #;
+//const int P2CTL = #;
+//const int P1Speed = #;
+//const int P2Speed = #;
 //Speaker
 //const int speaker = #;
 //SD
@@ -258,6 +262,8 @@ void loop() {
       state = cleanUpProcess;
       break;
     }
+
+    //** Clean up Lines **//
     case cleanUpProcess:
       //Set valves to flow inert gas to clear the lines
 
@@ -303,9 +309,11 @@ void loop() {
 
 
 //Pad a zero in front of digits
-void padDigits(int number){
+String padDigits(int number){
   if(number <10){
-    
+    return String("0" + number);
+  }else{
+    return String(number);
   }
 }//end padDigits function
 
@@ -544,7 +552,7 @@ void doUserInterface(int UIState){
           lcd.clear();
           return;
         }
-        
+      
         break; 
         
       default :
@@ -553,66 +561,62 @@ void doUserInterface(int UIState){
   }
 }//end doUserInterface function
 
-/*
+
 void emergencyShutdown(){
   //send command to turn on emergencyLED  
-  digitalWrite(alertLED, HIGH);
+  //digitalWrite(alertLED, HIGH);
   
   //send command to turn off pumps
-  digitalWrite(P1CTL, HIGH);
-  digitalWrite(P2CTL, HIGH);
-  analogWrite(P1Speed, 0);
-  analogWrite(P2Speed, 0);
+  //digitalWrite(P1CTL, HIGH);
+  //digitalWrite(P2CTL, HIGH);
+  //analogWrite(P1Speed, 0);
+  //analogWrite(P2Speed, 0);
   
   //send command to turn valves to closed
   
   //TODO
   
   //Write current time and emergency message to SD
-  // TODO: check scope on logFile
-  File logFile = SD.open(fileName, FILE_WRITE);
-  if(logFile){
-      
-    logFile.println("Emergency shutdown procedure initiated.");
+  logfile = SD.open(fileName, FILE_WRITE);
+  if(logfile){
+    logfile.println("Emergency shutdown procedure initiated.");
         
     // Print date...
     //print2digits isn't a library function, but I guess it adds a zero for single digits
     //I started to write something similar, padDigits function above
       
-    logFile.padDigits(rtc.getDay()); 
-    logFile.print("/");
-    logFile.padDigits(rtc.getMonth());
-    logFile.print("/");
-    logFile.padDigits(rtc.getYear());
-    logFile.print(" ");
+    logfile.print(padDigits(rtc.getDay())); 
+    logfile.print("/");
+    logfile.print(padDigits(rtc.getMonth()));
+    logfile.print("/");
+    logfile.print(padDigits(rtc.getYear()));
+    logfile.print(" ");
 
     // Print time
-    logfile.padDigits(rtc.getHours());
-    logFile.print(":");
-    logFile.padDigits(rtc.getMinutes());
-    logFile.print(":");
-    logFile.padDigits(rtc.getSeconds());
+    logfile.print(padDigits(rtc.getHours()));
+    logfile.print(":");
+    logfile.print(padDigits(rtc.getMinutes()));
+    logfile.print(":");
+    logfile.print(padDigits(rtc.getSeconds()));
 
-    logFile.println();
-    logFile.close();
+    logfile.println();
+    logfile.close();
     Serial.println("Date and time recorded successfully");
     
   }
   else{
-       Serial.println("error with the file, emergency shutdown initiated.");
+       Serial.println("Error with the file, emergency shutdown initiated.");
   }
   
-  /*
   while(1){
     //sound alert through speaker
-    digitalWrite(speaker, HIGH);
+    //digitalWrite(speaker, HIGH);
     delay(100);
-    digitalWrite(speaker,LOW);
+    //digitalWrite(speaker,LOW);
     delay(1000);
   }
-  */
   
-//}//end emergencyShutdown function
+}//end emergencyShutdown function
 
 
 //** Inputs: Address for value to be chosen **//
