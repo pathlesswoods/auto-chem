@@ -136,9 +136,7 @@ void setup() {
 
 //main loop
 void loop() {
-  //Allow 12 bit resolution on analog pins
-  //analogReadResolution(12);
-
+  
   //check pump error flag every loop
   if(pumpError){
     //set state to emergency state
@@ -147,7 +145,7 @@ void loop() {
   
   switch(state){
 
-    //** Initialize everything needed **//
+    //** Initialize Necessary Variables **//
     case initial:
     {
       //initialize LEDs
@@ -397,8 +395,13 @@ void doUserInterface(int UIState){
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
 
+        flowOne = getPumpSetting();
+        lcd.setCursor(7,2);
+        lcd.print(flowOne);
+
+
         //call captureInputs function
-        if(captureInput(&flowOne)){
+        if(captureButtons()){
           UIState = SelectVolumeOne;
         }else{
           UIState = MenuLanding;
@@ -417,9 +420,13 @@ void doUserInterface(int UIState){
         lcd.print("0000");
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
+
+        volumeOne = getPumpSetting();
+        lcd.setCursor(7,2);
+        lcd.print(volumeOne);
         
         //call captureInputs function
-        if(captureInput(&volumeOne)){
+        if(captureButtons()){
           //if Select pushed, on to next menu page
           UIState = ConfirmPumpOne;
         }else{
@@ -466,8 +473,13 @@ void doUserInterface(int UIState){
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
 
+        flowTwo = getPumpSetting();
+
+        lcd.setCursor(7,2);
+        lcd.print(flowTwo);
+        
         //if press select, then continue with menu, else go back
-        if(captureInput(&flowTwo)){
+        if(captureButtons()){
           UIState = SelectVolumeTwo;
         }else{
           UIState = ConfirmPumpOne;
@@ -487,8 +499,13 @@ void doUserInterface(int UIState){
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
 
+        //get selected setting from user and display
+        volumeTwo = getPumpSetting();
+        lcd.setCursor(7,2);
+        lcd.print(volumeTwo);
+        
         //if select pressed, continue menu flow, otherwise go back
-        if(captureInput(&volumeTwo)){
+        if(captureButtons()){
           UIState = ConfirmPumpTwo;
         }else{
           UIState = SelectFlowTwo;
@@ -651,9 +668,72 @@ void emergencyShutdownInterrupt(){
 }//end emergencyShutdown function
 
 
-//** Inputs: Address for value to be chosen **//
-//** Returns: Integer value of Select = 1, Cancel = 0 **//
-int captureInput(int* chosenValue){
+/* 
+ * Function that gets a 4 digit number from user
+ * Inputs: 
+ * Returns: Integer value of pump setting chosen
+*/ 
+int getPumpSetting(){
+  //variables for switch statment
+  int digit=1;
+  const int firstDigit=1;
+  const int secondDigit=2;
+  const int thirdDigit=3;
+  const int fourthDigit=4;
+  const int finish=5;
+
+  //Variables to set
+  int value=0;
+  int firstValue=0;
+  int secondValue=0;
+  int thirdValue=0;
+  int fourthValue=0;
+
+  //run until all positions are filled
+  while(1){
+    switch(digit){
+      case firstDigit :
+        if(captureInput(&firstValue, firstDigit)){
+          digit=secondDigit;
+        }//no else, ignore if user hits cancel
+        break;
+      case secondDigit :
+        if(captureInput(&secondValue, secondDigit)){
+          digit=thirdDigit;
+        }else{
+          digit=secondDigit;
+        }
+        break;
+      case thirdDigit :
+        if(captureInput(&thirdValue, thirdDigit)){
+          digit=fourthDigit;
+        }else{
+          digit=thirdDigit;
+        }
+        break;
+      case fourthDigit :
+        if(captureInput(&fourthValue, fourthDigit)){
+          digit=finish;
+        }else{
+          digit=thirdDigit;
+        }
+        break;
+      case finish : 
+        value = (firstValue*1000)+(secondValue*100)+(thirdValue*10)+fourthValue;
+        return value;
+      default:
+        //something went wrong if you're here
+        break;
+    }
+  }
+}
+
+
+/* Inputs: Address for value to be chosen, integer value of place
+ *  of value (1-4)
+ * Returns: Integer value of Select = 1, Cancel = 0 
+*/
+int captureInput(int* chosenValue, int placeValue){
   
   //holds state of buttons and pots
   int selectButtonState = LOW;
@@ -662,12 +742,11 @@ int captureInput(int* chosenValue){
   int lastCancelButtonState = LOW;
   int readingSelectButton;
   int readingCancelButton;
-  int readingCoarsePot;
-  int readingFinePot;
+  //int readingCoarsePot;
+  //int readingFinePot;
 
   //holds calculated value based on two pots
-  int tempFinePot;
-  int tempCoarsePot;
+  int lastValue;
   int value;
 
   //debounce variables
@@ -681,19 +760,15 @@ int captureInput(int* chosenValue){
     readingSelectButton=digitalRead(selectButton);
     readingCancelButton=digitalRead(cancelButton);
 
-    //display potentiometer readings to LCD
-    //might want to make this a thing that happens on change
-    //lcd can't keep up with the frequency of writes, dims
-    //assumes 12 bit resolution on pins
-    tempCoarsePot = map(analogRead(coarsePot), 0, 4095, 0, 400);
-    tempFinePot = map(analogRead(finePot), 0, 4095, 0, 9); 
-    value = (tempCoarsePot*10) + tempFinePot;
-    //catch overflow from adding finePot if coarsePot is maxed out
-    if(value>4000){
-      value=4000;
+    //Display potentiometer readings to LCD only on 
+    //change otherwise LCD can't keep up with frequency of writes.
+    value = map(analogRead(coarsePot), 0, 1023, 0, 9);
+    if(value!=lastValue){
+      //added 6 to place value to get it in middle-ish of LCD
+      lcd.setCursor((placeValue+6),2);
+      lcd.print(value);
+      lastValue=value;
     }
-    lcd.setCursor(6,2);
-    lcd.print(value);
 
     //check state of buttons changed, reset debounce timer
     if(lastSelectButtonState!=readingSelectButton){
@@ -723,7 +798,6 @@ int captureInput(int* chosenValue){
          cancelButtonState = readingCancelButton;
          //only do something if the button is pressed
          if(cancelButtonState = HIGH){
-            //go to menu landing state
             return 0;
          }
       }
@@ -731,9 +805,12 @@ int captureInput(int* chosenValue){
     lastSelectButtonState = readingSelectButton;
     lastCancelButtonState = readingCancelButton;
   }
-}//end captureInput() function
+}//end captureInput
 
-
+/* Function to specifically capture 
+ * Select or Cancel Button presses
+ * Returns: 1 for Select, 0 for Cancel
+*/ 
 int captureButtons(){
   
   //holds state of buttons and pots
