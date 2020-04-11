@@ -23,7 +23,7 @@
 //const int speaker = #;
 //SD
 //Potentiometers
-const int coarsePot = A1;
+const int coarsePot = A5;
 const int finePot = A2;
 //LEDS
 //const int runningLED = #;
@@ -50,6 +50,8 @@ String fileName = "failed";
 File logfile;
 //LCD
 LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 20, 4);
+//Pumps
+bool pumpError = false;
 
 // ** states for the main loop ** //
 int state = 7;
@@ -82,7 +84,9 @@ int flowTwo;
 int volumeOne;
 int volumeTwo;
 
-float runtime = 0;
+//runtimes in milliseconds
+unsigned long runtime = 0;
+unsigned long starttime = 0;
 
 void setup() {
   //**Establish serial communication for debugging**//
@@ -132,7 +136,13 @@ void setup() {
 //main loop
 void loop() {
   //Allow 12 bit resolution on analog pins
-  analogReadResolution(12);
+  //analogReadResolution(12);
+
+  //check pump error flag every loop
+  if(pumpError){
+    //call emergency function
+    emergencyShutdown();
+  }
   
   switch(state){
 
@@ -223,18 +233,29 @@ void loop() {
         Serial.println("Error with the file");
         //queue emergency shutdown?
       }
-      
+
+      //capture current time
+      starttime = millis();
       state = processRunning;
       break;
 
     //** Process Running **//
     case processRunning:
-      //run for alloted time
       //periodically check pumps feedback for errors
-      //check flag for errors during this time
-      state = stopProcess;
-      break;
+      /*
+      if(pumps signals isn't matching what it's supposed to){
+        pumpError=true;
+      }
+      */
+
       
+      if((millis()-starttime)>runtime){
+        state = stopProcess;
+      }
+      
+      break;
+
+    //** Stop Process **//
     case stopProcess:
     {
       //command pump to turn off/stop pump
@@ -282,13 +303,15 @@ void loop() {
       //Serial.print("Accessing Menu...");
       //doUserInterface(MenuLanding);
       
-      Serial.print("Testing coarse pot...\n");
-      int tempCoarsePot = map(analogRead(coarsePot), 0, 4095, 0, 400);
+      Serial.print("\nTesting coarse pot...\n");
+      int tempCoarsePot = map(analogRead(coarsePot), 0, 1023, 0, 9);
       //int tempFinePot = map(analogRead(finePot), 0, 4095, 0, 9); 
       //int value = (tempCoarsePot*10) + tempFinePot;
       //catch overflow from adding finePot if coarsePot is maxed out
       Serial.print("\ncoarsePot=\n");
       Serial.print(analogRead(coarsePot));
+      Serial.print("\ncoarsePot adjusted 0-9\n");
+      Serial.print(tempCoarsePot);
       //Serial.print("\nfinePot=\n");
       //Serial.print(analogRead(finePot));
       //lcd.clear();
