@@ -54,7 +54,6 @@ LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 20, 4);
 bool pumpError = false;
 
 // ** states for the main loop ** //
-int state = 7;
 const int initial = 0;
 const int selectParameters = 1;
 const int calculations = 2;
@@ -62,7 +61,9 @@ const int startProcess = 3;
 const int processRunning = 4;
 const int stopProcess = 5;
 const int cleanUpProcess = 6;
-const int hardwareTesting = 7;
+const int emergencyShutdown = 7;
+const int hardwareTesting = 8;
+int state = hardwareTesting;
 
 // ** states for UI ** //
 const int MenuLanding = 0;
@@ -140,8 +141,8 @@ void loop() {
 
   //check pump error flag every loop
   if(pumpError){
-    //call emergency function
-    emergencyShutdown();
+    //set state to emergency state
+    //state = emergencyShutdown;
   }
   
   switch(state){
@@ -297,6 +298,14 @@ void loop() {
       state = initial;
       break;
 
+    //** Emergency Shutdown**//
+    case emergencyShutdown :
+     //call UI funtion to handle LCD notifying user
+     //somehow deal with speaker alarm
+
+
+      break;
+      
     //** Test and Troubleshoot Hardware **//
     case hardwareTesting:
     {
@@ -585,7 +594,7 @@ void doUserInterface(int UIState){
 }//end doUserInterface function
 
 
-void emergencyShutdown(){
+void emergencyShutdownInterrupt(){
   //send command to turn on emergencyLED  
   //digitalWrite(alertLED, HIGH);
   
@@ -596,18 +605,13 @@ void emergencyShutdown(){
   //analogWrite(P2Speed, 0);
   
   //send command to turn valves to closed
-  
-  //TODO
-  
+ 
   //Write current time and emergency message to SD
   logfile = SD.open(fileName, FILE_WRITE);
   if(logfile){
     logfile.println("Emergency shutdown procedure initiated.");
         
-    // Print date...
-    //print2digits isn't a library function, but I guess it adds a zero for single digits
-    //I started to write something similar, padDigits function above
-      
+    // Print date...  
     logfile.print(padDigits(rtc.getDay())); 
     logfile.print("/");
     logfile.print(padDigits(rtc.getMonth()));
@@ -630,7 +634,9 @@ void emergencyShutdown(){
   else{
        Serial.println("Error with the file, emergency shutdown initiated.");
   }
-  
+
+  //don't want this here, will never be able to turn it off.
+  /*
   while(1){
     //sound alert through speaker
     //digitalWrite(speaker, HIGH);
@@ -638,6 +644,9 @@ void emergencyShutdown(){
     //digitalWrite(speaker,LOW);
     delay(1000);
   }
+  */
+  //change state to handle anything else outside of interrupt
+  state = emergencyShutdown;
   
 }//end emergencyShutdown function
 
