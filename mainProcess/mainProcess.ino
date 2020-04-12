@@ -29,8 +29,8 @@ const int finePot = A2;
 //const int runningLED = #;
 //const int alertLED = #
 //Buttons
-const int selectButton = 7;
-const int cancelButton = 6;
+const int selectButton = 2;
+const int cancelButton = 4;
 //const int emergencyButton = #;
 
 /* 
@@ -306,24 +306,27 @@ void loop() {
       
     //** Test and Troubleshoot Hardware **//
     case hardwareTesting:
-    {
-      //Serial.print("Accessing Menu...");
-      //doUserInterface(MenuLanding);
+    {  
       
-      Serial.print("\nTesting coarse pot...\n");
-      int tempCoarsePot = map(analogRead(coarsePot), 0, 1023, 0, 9);
-      //int tempFinePot = map(analogRead(finePot), 0, 4095, 0, 9); 
-      //int value = (tempCoarsePot*10) + tempFinePot;
-      //catch overflow from adding finePot if coarsePot is maxed out
-      Serial.print("\ncoarsePot=\n");
-      Serial.print(analogRead(coarsePot));
-      Serial.print("\ncoarsePot adjusted 0-9\n");
-      Serial.print(tempCoarsePot);
-      //Serial.print("\nfinePot=\n");
-      //Serial.print(analogRead(finePot));
-      //lcd.clear();
-      //lcd.setCursor(6,2);
-      //lcd.print(value);
+      lcd.setCursor(0,0);
+      lcd.print("Test input");
+      int test = getPumpSetting();
+      Serial.print("\nValue selected is...\n");
+      Serial.print(test);
+      
+      /*
+      if(captureButtons()){
+        Serial.print("\nCaptured a select.\n");
+      }else{
+        Serial.print("\nCaptured a cancel.\n");
+      }
+      */
+      /*
+      Serial.print("\nCancel Button status: \n");
+      Serial.print(digitalRead(cancelButton));
+      Serial.print("\nSelect Button status: \n");
+      Serial.print(digitalRead(selectButton));
+      */
     }
       break;
       
@@ -333,7 +336,7 @@ void loop() {
   }
   
   //delay for testing purposes
-  delay(1000);
+  delay(500);
   
 }//end main loop function
 
@@ -694,32 +697,47 @@ int getPumpSetting(){
     switch(digit){
       case firstDigit :
         if(captureInput(&firstValue, firstDigit)){
+          Serial.print("\nFirst digit: ");
+          Serial.print(firstValue); 
           digit=secondDigit;
+          Serial.print("\ndigit is now currently: \n");
+          Serial.print(digit);
         }//no else, ignore if user hits cancel
         break;
       case secondDigit :
         if(captureInput(&secondValue, secondDigit)){
+          Serial.print("\nSecond digit: ");
+          Serial.print(secondValue);
           digit=thirdDigit;
         }else{
-          digit=secondDigit;
+          Serial.print("\nSelected cancel, back to first digit.\n");
+          digit=firstDigit;
         }
         break;
       case thirdDigit :
         if(captureInput(&thirdValue, thirdDigit)){
+          Serial.print("\nThird digit: ");
+          Serial.print(thirdValue);
           digit=fourthDigit;
         }else{
-          digit=thirdDigit;
+          Serial.print("\nSelected cancel, back to second digit.\n");
+          digit=secondDigit;
         }
         break;
       case fourthDigit :
         if(captureInput(&fourthValue, fourthDigit)){
+          Serial.print("\nFourth digit: ");
+          Serial.print(fourthValue);
           digit=finish;
         }else{
+          Serial.print("\nSelected cancel, back to third digit.\n");
           digit=thirdDigit;
         }
         break;
       case finish : 
         value = (firstValue*1000)+(secondValue*100)+(thirdValue*10)+fourthValue;
+        Serial.print("\nMade it to finish, value is...\n");
+        Serial.print(value);
         return value;
       default:
         //something went wrong if you're here
@@ -733,7 +751,7 @@ int getPumpSetting(){
  *  of value (1-4)
  * Returns: Integer value of Select = 1, Cancel = 0 
 */
-int captureInput(int* chosenValue, int placeValue){
+bool captureInput(int* chosenValue, int placeValue){
   
   //holds state of buttons and pots
   int selectButtonState = LOW;
@@ -742,17 +760,15 @@ int captureInput(int* chosenValue, int placeValue){
   int lastCancelButtonState = LOW;
   int readingSelectButton;
   int readingCancelButton;
-  //int readingCoarsePot;
-  //int readingFinePot;
 
   //holds calculated value based on two pots
-  int lastValue;
-  int value;
+  int lastValue=0;
+  int value=0;
 
   //debounce variables
   unsigned long lastSelectButtonPress = 0;
   unsigned long lastCancelButtonPress = 0;
-  unsigned long debounceTime = 50;
+  unsigned long debounceTime = 100;
 
   
   while(true){
@@ -773,7 +789,8 @@ int captureInput(int* chosenValue, int placeValue){
     //check state of buttons changed, reset debounce timer
     if(lastSelectButtonState!=readingSelectButton){
       lastSelectButtonPress = millis();
-    }else if(lastCancelButtonState!=readingCancelButton){
+    }
+    if(lastCancelButtonState!=readingCancelButton){
       lastCancelButtonPress = millis();
     }
     
@@ -786,7 +803,7 @@ int captureInput(int* chosenValue, int placeValue){
          if(selectButtonState = HIGH){
             //save the values for chosenValue for reference outside this function
             *chosenValue = value;
-            return 1;
+            return true;
          }
       }
     }
@@ -798,7 +815,7 @@ int captureInput(int* chosenValue, int placeValue){
          cancelButtonState = readingCancelButton;
          //only do something if the button is pressed
          if(cancelButtonState = HIGH){
-            return 0;
+            return false;
          }
       }
     }
@@ -811,7 +828,7 @@ int captureInput(int* chosenValue, int placeValue){
  * Select or Cancel Button presses
  * Returns: 1 for Select, 0 for Cancel
 */ 
-int captureButtons(){
+bool captureButtons(){
   
   //holds state of buttons and pots
   int selectButtonState = LOW;
@@ -824,28 +841,30 @@ int captureButtons(){
   //debounce variables
   unsigned long lastSelectButtonPress = 0;
   unsigned long lastCancelButtonPress = 0;
-  unsigned long debounceTime = 50;
+  unsigned long debounceTime = 100;
 
   while(true){
     //get button and potentiometer status
     readingSelectButton=digitalRead(selectButton);
     readingCancelButton=digitalRead(cancelButton);
 
-    //check state of buttons changed, reset debounce timer
+    //check state of select button changed, reset debounce timer
     if(lastSelectButtonState!=readingSelectButton){
       lastSelectButtonPress = millis();
-    }else if(lastCancelButtonState!=readingCancelButton){
+    }
+    //check state of cancel button changed, reset debounce timer
+    if(lastCancelButtonState!=readingCancelButton){
       lastCancelButtonPress = millis();
     }
     
     //Make sure waited for debounce delay on select button
     if(millis()-lastSelectButtonPress>debounceTime){
-      //Want this action to happen only once per select button press
+      //Want this action to happen only once per button press
       if(readingSelectButton!=selectButtonState){
          selectButtonState = readingSelectButton;
          //only do something if the button is pressed
          if(selectButtonState = HIGH){
-            return 1;
+            return true;
          }
       }
     }
@@ -857,7 +876,7 @@ int captureButtons(){
          cancelButtonState = readingCancelButton;
          //only do something if the button is pressed
          if(cancelButtonState = HIGH){
-            return 0;
+            return false;
          }
       }
     }
