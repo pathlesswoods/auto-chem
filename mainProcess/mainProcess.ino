@@ -5,6 +5,7 @@
 #include <RTCZero.h>
 #include <SPI.h>
 #include <RTCZero.h>
+#include <MKRMotorCarrier.h>
 
 //custom libraries
 //#include <ValveControl.h>
@@ -21,6 +22,8 @@
 //const int P2Speed = #;
 //const int P1ReturnSignal = #;
 //const int P2ReturnSignal = #;
+//const int P1Alarm = #;
+//const int P2Alarm = #;
 //Speaker
 //const int speaker = #;
 //SD
@@ -142,6 +145,24 @@ void setup() {
   //pinMode(P2Speed, OUTPUT);
   //pinMode(P1ReturnSignal, INPUT);
   //pinMode(P2ReturnSignal, INPUT);
+  //pinMode(P1Alarm, INPUT);
+  //pinMode(P2Alarm, INPUT);
+
+  //Establishing the communication with the motor shield
+  if (controller.begin()) 
+    {
+      Serial.print("MKR Motor Shield connected, firmware version ");
+      Serial.println(controller.getFWVersion());
+    } 
+  else 
+    {
+      Serial.println("Couldn't connect! Is the red led blinking? You may need to update the firmware with FWUpdater sketch");
+      while (1);
+    }
+
+  // Reboot the motor controller; brings every value back to default
+  Serial.println("reboot motor carrier");
+  controller.reboot();
   
 }//end setup function
 
@@ -330,6 +351,7 @@ void loop() {
       Serial.print("\nValue selected is...\n");
       Serial.print(test);
       
+      
       /*
       if(captureButtons()){
         Serial.print("\nCaptured a select.\n");
@@ -343,6 +365,30 @@ void loop() {
       Serial.print("\nSelect Button status: \n");
       Serial.print(digitalRead(selectButton));
       */
+
+      /*
+          //Servo sweep from 0 position to 180
+        for (int i=0; i<180; i+=5)
+        {
+          //Choose what of all the servo connectors do you want to use: servo1(default), servo2, servo3 or servo4
+          servo1.setAngle(i);
+          Serial.print("Servo position");
+          Serial.println(i);
+          delay(50);
+        }
+        
+        delay(200);
+        
+        //Servo sweep from 180 position to 0
+        for (int i=180; i>0; i-=5)
+        {
+          //Choose what of all the servo connectors do you want to use: servo1(default), servo2, servo3 or servo4
+          servo1.setAngle(i);
+          Serial.print("Servo position");
+          Serial.println(i);
+          delay(50);
+        }
+        */
     }
       break;
       
@@ -352,7 +398,7 @@ void loop() {
   }
   
   //delay for testing purposes
-  delay(500);
+  //delay(500);
   
 }//end main loop function
 
