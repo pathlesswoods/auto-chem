@@ -19,6 +19,8 @@
 //const int P2CTL = #;
 //const int P1Speed = #;
 //const int P2Speed = #;
+//const int P1ReturnSignal = #;
+//const int P2ReturnSignal = #;
 //Speaker
 //const int speaker = #;
 //SD
@@ -130,6 +132,16 @@ void setup() {
 
   //**Set up speaker**//
   //pinMode(speaker, OUTPUT);
+
+  //**Set up pumps **//
+  //pinMode(P1CTL, OUTPUT);
+  //digitalWrite(P1CTL, HIGH); //HIGH=OFF
+  //pinMode(P2CTL,OUTPUT);
+  //digitalWrite(P2CTR, HIGH); //HIGH=OFF
+  //pinMode(P1Speed, OUTPUT);
+  //pinMode(P2Speed, OUTPUT);
+  //pinMode(P1ReturnSignal, INPUT);
+  //pinMode(P2ReturnSignal, INPUT);
   
 }//end setup function
 
@@ -213,7 +225,11 @@ void loop() {
       //call UI function to ask user to prime pumps
       doUserInterface(PrimePumps);
 
-      //command pump to turn on/start pump
+      //Set speeds, then turn pumps on
+      //analogWrite(P1Speed,);
+      //analogWrite(P2Speed,);
+      //digitalWrite(P1CTR,LOW);
+      //digitalWrite(P2CTR,LOW);
       
 
       //Log the time the process started
