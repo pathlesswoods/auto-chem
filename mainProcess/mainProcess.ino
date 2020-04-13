@@ -2,7 +2,6 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <SD.h>
-#include <RTCZero.h>
 #include <SPI.h>
 #include <RTCZero.h>
 #include <MKRMotorCarrier.h>
@@ -142,7 +141,9 @@ void setup() {
   //pinMode(P2CTL,OUTPUT);
   //digitalWrite(P2CTR, HIGH); //HIGH=OFF
   //pinMode(P1Speed, OUTPUT);
+  //analogWrite(P1Speed,0);//initial speed is 0
   //pinMode(P2Speed, OUTPUT);
+  //analogWrite(P2Speed,0);//initial speed is 0
   //pinMode(P1ReturnSignal, INPUT);
   //pinMode(P2ReturnSignal, INPUT);
   //pinMode(P1Alarm, INPUT);
@@ -205,7 +206,7 @@ void loop() {
       doUserInterface(MenuLanding);
 
       //calculate the runtime
-      //millileters per minute for flowrate of pumps
+      //milliliters per minute for flowrate of pumps
       float tempRunTimeOne = volumeOne/flowOne;
       float tempRunTimeTwo = volumeTwo/flowTwo;
       if(tempRunTimeOne>tempRunTimeTwo){
@@ -242,6 +243,8 @@ void loop() {
     case startProcess:
 
       //set valves to flow reagent position
+      //servo1.setAngle();
+      //servo2.setAngle();
 
       //call UI function to ask user to prime pumps
       doUserInterface(PrimePumps);
@@ -345,6 +348,7 @@ void loop() {
     case hardwareTesting:
     {  
       
+      
       lcd.setCursor(0,0);
       lcd.print("Test input");
       int test = getPumpSetting();
@@ -365,30 +369,8 @@ void loop() {
       Serial.print("\nSelect Button status: \n");
       Serial.print(digitalRead(selectButton));
       */
-
-      /*
-          //Servo sweep from 0 position to 180
-        for (int i=0; i<180; i+=5)
-        {
-          //Choose what of all the servo connectors do you want to use: servo1(default), servo2, servo3 or servo4
-          servo1.setAngle(i);
-          Serial.print("Servo position");
-          Serial.println(i);
-          delay(50);
-        }
         
-        delay(200);
-        
-        //Servo sweep from 180 position to 0
-        for (int i=180; i>0; i-=5)
-        {
-          //Choose what of all the servo connectors do you want to use: servo1(default), servo2, servo3 or servo4
-          servo1.setAngle(i);
-          Serial.print("Servo position");
-          Serial.println(i);
-          delay(50);
-        }
-        */
+        delay(5000);
     }
       break;
       
@@ -457,6 +439,8 @@ void doUserInterface(int UIState){
         lcd.print("Select Flow for");
         lcd.setCursor(6,1);
         lcd.print("Pump One");
+        lcd.setCursor(7,2);
+        lcd.print("0000");
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
 
@@ -481,7 +465,7 @@ void doUserInterface(int UIState){
         lcd.print("Select Volume for");
         lcd.setCursor(6,1);
         lcd.print("Pump One");
-        lcd.setCursor(6,2);
+        lcd.setCursor(7,2);
         lcd.print("0000");
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
@@ -514,7 +498,7 @@ void doUserInterface(int UIState){
         lcd.setCursor(2,2);
         lcd.print("Volume");
         //display volume
-        lcd.setCursor(10,2);
+        lcd.setCursor(9,2);
         lcd.print(volumeOne);
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
@@ -529,12 +513,14 @@ void doUserInterface(int UIState){
         lcd.clear();
         break;
         
-      //** Menu Page to Select Flow for Pump Two *//
+      //** Menu Page to Select Flow for Pump Two **//
       case SelectFlowTwo :
         lcd.setCursor(0,0);
         lcd.print("Select Flow for");
         lcd.setCursor(6,1);
         lcd.print("Pump Two");
+        lcd.setCursor(7,2);
+        lcd.print("0000");
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
 
@@ -559,7 +545,7 @@ void doUserInterface(int UIState){
         lcd.print("Select Volume for");
         lcd.setCursor(6,1);
         lcd.print("Pump Two");
-        lcd.setCursor(6,2);
+        lcd.setCursor(7,2);
         lcd.print("0000");
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
@@ -591,7 +577,7 @@ void doUserInterface(int UIState){
         lcd.setCursor(2,2);
         lcd.print("Volume");
         //display volume
-        lcd.setCursor(10,2);
+        lcd.setCursor(9,2);
         lcd.print(volumeTwo);
         lcd.setCursor(0,3);
         lcd.print("Select        Cancel");
@@ -611,10 +597,13 @@ void doUserInterface(int UIState){
         return;
 
       case PrimePumps :
+        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Please prime pumps.");
         lcd.setCursor(0,1);
-        lcd.print("Please press select when done");
+        lcd.print("Please press select"); 
+        lcd.setCursor(5,2);
+        lcd.print("when done");
         lcd.setCursor(0,3);
         lcd.print("Select");
 
@@ -803,11 +792,11 @@ int getPumpSetting(){
         return value;
       default:
         //something went wrong if you're here
+        Serial.print("Error reading in pump value.");
         break;
     }
   }
-}
-
+}//end getPumpSettings
 
 /* Inputs: Address for value to be chosen, integer value of place
  *  of value (1-4)
@@ -816,10 +805,11 @@ int getPumpSetting(){
 bool captureInput(int* chosenValue, int placeValue){
   
   //holds state of buttons and pots
-  int selectButtonState = LOW;
-  int cancelButtonState = LOW;
-  int lastSelectButtonState = LOW;
-  int lastCancelButtonState = LOW;
+  int selectButtonState = digitalRead(selectButton);
+  int cancelButtonState = digitalRead(cancelButton);
+  int lastSelectButtonState = selectButtonState;
+  int lastCancelButtonState = cancelButtonState;
+  
   int readingSelectButton;
   int readingCancelButton;
 
@@ -831,7 +821,6 @@ bool captureInput(int* chosenValue, int placeValue){
   unsigned long lastSelectButtonPress = 0;
   unsigned long lastCancelButtonPress = 0;
   unsigned long debounceTime = 100;
-
   
   while(true){
     //get button and potentiometer status
@@ -859,47 +848,44 @@ bool captureInput(int* chosenValue, int placeValue){
     //Make sure waited for debounce delay on select button
     if(millis()-lastSelectButtonPress>debounceTime){
       //Want this action to happen only once per select button press
-      if(readingSelectButton!=selectButtonState){
-         selectButtonState = readingSelectButton;
-         //only do something if the button is pressed
-         if(selectButtonState = HIGH){
-            //save the values for chosenValue for reference outside this function
-            *chosenValue = value;
-            return true;
-         }
+      if(readingSelectButton==HIGH && selectButtonState==LOW){
+         *chosenValue=value;
+         return true;
+      }else{
+        selectButtonState=readingSelectButton;
       }
     }
 
     //make sure waited debounce delay on cancel button
     if(millis()-lastCancelButtonPress>debounceTime){
-      //Want this action to happen only once per cancel button press
-      if(readingCancelButton!=cancelButtonState){
-         cancelButtonState = readingCancelButton;
-         //only do something if the button is pressed
-         if(cancelButtonState = HIGH){
-            return false;
-         }
-      }
+       //Want this action to happen only once per cancel button press
+       if(readingCancelButton == HIGH && cancelButtonState==LOW){
+          return false;
+       }else{
+        cancelButtonState=readingCancelButton;
+       }
     }
     lastSelectButtonState = readingSelectButton;
     lastCancelButtonState = readingCancelButton;
   }
 }//end captureInput
 
+
 /* Function to specifically capture 
  * Select or Cancel Button presses
  * Returns: 1 for Select, 0 for Cancel
 */ 
 bool captureButtons(){
-  
+ 
   //holds state of buttons and pots
-  int selectButtonState = LOW;
-  int cancelButtonState = LOW;
-  int lastSelectButtonState = LOW;
-  int lastCancelButtonState = LOW;
+  int selectButtonState = digitalRead(selectButton);
+  int cancelButtonState = digitalRead(cancelButton);
+  int lastSelectButtonState = selectButtonState;
+  int lastCancelButtonState = cancelButtonState;
+  
   int readingSelectButton;
   int readingCancelButton;
-
+  
   //debounce variables
   unsigned long lastSelectButtonPress = 0;
   unsigned long lastCancelButtonPress = 0;
@@ -910,37 +896,32 @@ bool captureButtons(){
     readingSelectButton=digitalRead(selectButton);
     readingCancelButton=digitalRead(cancelButton);
 
-    //check state of select button changed, reset debounce timer
+    //check state of buttons changed, reset debounce timer
     if(lastSelectButtonState!=readingSelectButton){
       lastSelectButtonPress = millis();
     }
-    //check state of cancel button changed, reset debounce timer
     if(lastCancelButtonState!=readingCancelButton){
       lastCancelButtonPress = millis();
     }
     
     //Make sure waited for debounce delay on select button
     if(millis()-lastSelectButtonPress>debounceTime){
-      //Want this action to happen only once per button press
-      if(readingSelectButton!=selectButtonState){
-         selectButtonState = readingSelectButton;
-         //only do something if the button is pressed
-         if(selectButtonState = HIGH){
-            return true;
-         }
+      //Want this action to happen only once per select button press
+      if(readingSelectButton==HIGH && selectButtonState==LOW){
+         return true;
+      }else{
+        selectButtonState=readingSelectButton;
       }
     }
 
     //make sure waited debounce delay on cancel button
     if(millis()-lastCancelButtonPress>debounceTime){
-      //Want this action to happen only once per cancel button press
-      if(readingCancelButton!=cancelButtonState){
-         cancelButtonState = readingCancelButton;
-         //only do something if the button is pressed
-         if(cancelButtonState = HIGH){
-            return false;
-         }
-      }
+       //Want this action to happen only once per cancel button press
+       if(readingCancelButton == HIGH && cancelButtonState==LOW){
+          return false;
+       }else{
+        cancelButtonState=readingCancelButton;
+       }
     }
     lastSelectButtonState = readingSelectButton;
     lastCancelButtonState = readingCancelButton;
