@@ -12,29 +12,31 @@
 /*
  * Definitions for Hardware Pins
  */
-//LCD
-//Motors <-variables should go in custom library
+//LCD 
+//uses I2C to communicate, no hardware pins defined
+//Servo Motors 
+//Have pins defined in the motorcarrier library
 //Pumps
-//const int P1CTL = #;
-//const int P2CTL = #;
-//const int P1Speed = #;
-//const int P2Speed = #;
-//const int P1ReturnSignal = #;
-//const int P2ReturnSignal = #;
-//const int P1Alarm = #;
-//const int P2Alarm = #;
+const int P1CTL = 6;
+const int P2CTL = 7;
+const int P1Speed = 5;
+const int P2Speed = 4;
+const int P1ReturnSignal = A6;
+const int P2ReturnSignal = A1;
+const int P1Alarm = 3;
+const int P2Alarm = 1;
 //Speaker
-//const int speaker = #;
+const int speaker = 8;
 //SD
 //Potentiometers
-const int coarsePot = A5;
-const int finePot = A2;
+const int coarsePot = A2;
+//const int finePot = A2;
 //LEDS
-//const int runningLED = #;
-//const int alertLED = #
+const int runningLED = 10;
+const int alertLED = 9;
 //Buttons
-const int selectButton = 2;
-const int cancelButton = 4;
+const int selectButton = 14;
+const int cancelButton = 13;
 //const int emergencyButton = #;
 
 /* 
@@ -56,6 +58,19 @@ File logfile;
 LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 20, 4);
 //Pumps
 bool pumpError = false;
+//Motors
+const int flowReagent1 = 30;
+const int flowReagent2 = 30;
+const int flowReagent3 = 30;
+const int flowReagent4 = 30;
+const int cleanLines1 = 90;
+const int cleanLines2 = 90;
+const int cleanLines3 = 90;
+const int cleanLines4 = 90;
+const int closed1 = 0;
+const int closed2 = 0;
+const int closed3 = 0;
+const int closed4 = 0;
 
 // ** states for the main loop ** //
 const int initial = 0;
@@ -133,21 +148,21 @@ void setup() {
   pinMode(finePot, INPUT);
 
   //**Set up speaker**//
-  //pinMode(speaker, OUTPUT);
+  pinMode(speaker, OUTPUT);
 
   //**Set up pumps **//
-  //pinMode(P1CTL, OUTPUT);
-  //digitalWrite(P1CTL, HIGH); //HIGH=OFF
-  //pinMode(P2CTL,OUTPUT);
-  //digitalWrite(P2CTR, HIGH); //HIGH=OFF
-  //pinMode(P1Speed, OUTPUT);
-  //analogWrite(P1Speed,0);//initial speed is 0
-  //pinMode(P2Speed, OUTPUT);
-  //analogWrite(P2Speed,0);//initial speed is 0
-  //pinMode(P1ReturnSignal, INPUT);
-  //pinMode(P2ReturnSignal, INPUT);
-  //pinMode(P1Alarm, INPUT);
-  //pinMode(P2Alarm, INPUT);
+  pinMode(P1CTL, OUTPUT);
+  digitalWrite(P1CTL, HIGH); //HIGH=OFF
+  pinMode(P2CTL,OUTPUT);
+  digitalWrite(P2CTL, HIGH); //HIGH=OFF
+  pinMode(P1Speed, OUTPUT);
+  analogWrite(P1Speed,0);//initial speed is 0
+  pinMode(P2Speed, OUTPUT);
+  analogWrite(P2Speed,0);//initial speed is 0
+  pinMode(P1ReturnSignal, INPUT);
+  pinMode(P2ReturnSignal, INPUT);
+  pinMode(P1Alarm, INPUT);
+  pinMode(P2Alarm, INPUT);
 
   //Establishing the communication with the motor shield
   if (controller.begin()) 
@@ -220,15 +235,15 @@ void loop() {
       if(logfile){
         logfile.println("User selected the following parameters: \n");
         logfile.println("Pump One Flow: \n");
-        logfile.println(flowOne);
+        logfile.print(flowOne);
         logfile.println("\nPump One Volume: \n");
-        logfile.println(volumeOne);
+        logfile.print(volumeOne);
         logfile.println("\nPump Two Flow: \n");
-        logfile.println(flowTwo);
+        logfile.print(flowTwo);
         logfile.println("\nPump Two Volume: \n");
-        logfile.println(volumeTwo);
+        logfile.print(volumeTwo);
         logfile.println("Calculated runtime is: \n");
-        logfile.println(runtime);
+        logfile.print(runtime);
         logfile.close();
       }else{
         Serial.println("Error with the file");
@@ -241,32 +256,40 @@ void loop() {
 
     //** Process Startup **//
     case startProcess:
-
+      
       //set valves to flow reagent position
-      //servo1.setAngle();
-      //servo2.setAngle();
+      servo1.setAngle(flowReagent1);
+      delay(3000);
+      servo2.setAngle(flowReagent2);
+      delay(3000);
+      servo3.setAngle(flowReagent3);
+      delay(3000);
+      servo4.setAngle(flowReagent4);
+      delay(3000);
 
       //call UI function to ask user to prime pumps
       doUserInterface(PrimePumps);
 
       //Set speeds, then turn pumps on
-      //analogWrite(P1Speed,);
-      //analogWrite(P2Speed,);
-      //digitalWrite(P1CTR,LOW);
-      //digitalWrite(P2CTR,LOW);
+      analogWrite(P1Speed, 30);
+      analogWrite(P2Speed, 30);
+      //will probably have to do some math to convert 
+      //selected flow into a suitable speed
+      //analogWrite(P1Speed, flowOne);
+      //analogWrite(P2Speed, flowTwo);
+      digitalWrite(P1CTL,LOW);
+      digitalWrite(P2CTL,LOW);
       
-
       //Log the time the process started
       logfile = SD.open(fileName, FILE_WRITE);
       if(logfile){
         logfile.println("Process started at: ");
-        logfile.println();
         String minutesDec = String(minutes, DEC);
         String hoursDec = String(hours, DEC);
         String dayDec = String(day, DEC);
         String monthDec = String(month, DEC);
         String currentDateTime = String(monthDec + "/" + dayDec + " " + hoursDec + ":" + minutesDec);
-        logfile.println(currentDateTime);
+        logfile.print(currentDateTime);
         logfile.close();
       }else{
         Serial.println("Error with the file");
@@ -281,13 +304,11 @@ void loop() {
     //** Process Running **//
     case processRunning:
       //periodically check pumps feedback for errors
-      /*
-      if(pumps signals isn't matching what it's supposed to){
+      //should be receiving some analog signal
+      if((analogRead(P1ReturnSignal)<15)||(analogRead(P2ReturnSignal)<15)){
         pumpError=true;
       }
-      */
 
-      
       if((millis()-starttime)>runtime){
         state = stopProcess;
       }
@@ -298,18 +319,21 @@ void loop() {
     case stopProcess:
     {
       //command pump to turn off/stop pump
+      digitalWrite(P1CTL,HIGH);
+      digitalWrite(P2CTL,HIGH);
+      analogWrite(P1Speed, 0);
+      analogWrite(P2Speed, 0);
  
       //Log the time the process ended
       logfile = SD.open(fileName, FILE_WRITE);
       if(logfile){
         logfile.println("Process ended at: ");
-        logfile.println();
         String minutesDec = String(minutes, DEC);
         String hoursDec = String(hours, DEC);
         String dayDec = String(day, DEC);
         String monthDec = String(month, DEC);
         String currentDateTime = String(monthDec + "/" + dayDec + " " + hoursDec + ":" + minutesDec);
-        logfile.println(currentDateTime);
+        logfile.print(currentDateTime);
         logfile.close();
       }else{
         Serial.println("Error with the file");
@@ -326,12 +350,19 @@ void loop() {
     //** Clean up Lines **//
     case cleanUpProcess:
       //Set valves to flow inert gas to clear the lines
+      //servo1.setAngle(cleanLines1);
+      //servo2.setAngle(cleanLines2);
+      //servo3.setAngle(cleanLines3);
+      //servo4.setAngle(cleanLines4);
 
       //Call UI to ask user if done clearing the lines.
       doUserInterface(ConfirmClearedLines);
 
       //Set valves to closed.
-
+      //servo1.setAngle(closed1);
+      //servo2.setAngle(closed2);
+      //servo3.setAngle(closed3);
+      //servo4.setAngle(closed4);
       
       state = initial;
       break;
@@ -370,7 +401,7 @@ void loop() {
       Serial.print(digitalRead(selectButton));
       */
         
-        delay(5000);
+      delay(5000);
     }
       break;
       
