@@ -17,7 +17,7 @@
 //Servo Motors 
 //Have pins defined in the motorcarrier library
 //Pumps
-const int P1CTL = 6;
+const int P1CTL = 2;
 const int P2CTL = 7;
 const int P1Speed = 5;
 const int P2Speed = 4;
@@ -82,6 +82,7 @@ const int stopProcess = 5;
 const int cleanUpProcess = 6;
 const int emergencyShutdown = 7;
 const int hardwareTesting = 8;
+const int emergencyShutdownState = 9;
 int state = hardwareTesting;
 
 // ** states for UI ** //
@@ -97,6 +98,7 @@ const int PrimePumps = 8;
 const int ProcessRunning = 9;
 const int ConfirmEndProcess = 10;
 const int ConfirmClearedLines = 11;
+const int emergencyNotification = 12;
 
 //Runtime Variables
 int flowOne;
@@ -145,7 +147,7 @@ void setup() {
 
   //**Set up potentiometers **//
   pinMode(coarsePot, INPUT);
-  pinMode(finePot, INPUT);
+  //pinMode(finePot, INPUT);
 
   //**Set up speaker**//
   pinMode(speaker, OUTPUT);
@@ -189,7 +191,7 @@ void loop() {
   //check pump error flag every loop
   if(pumpError){
     //set state to emergency state
-    //state = emergencyShutdown;
+    state = emergencyShutdownState;
   }
   
   switch(state){
@@ -368,23 +370,26 @@ void loop() {
       break;
 
     //** Emergency Shutdown**//
-    case emergencyShutdown :
-     //call UI funtion to handle LCD notifying user
-     //somehow deal with speaker alarm
-
-
+    case emergencyShutdownState :
+      //call emergency function
+      doEmergencyShutdown();
+      //notify user of emergency
+      doUserInterface(emergencyNotification);
+      //return to initial state.
+      state = cleanUpProcess;
       break;
       
     //** Test and Troubleshoot Hardware **//
     case hardwareTesting:
     {  
       
-      
+      /*
       lcd.setCursor(0,0);
       lcd.print("Test input");
       int test = getPumpSetting();
       Serial.print("\nValue selected is...\n");
       Serial.print(test);
+      */
       
       
       /*
@@ -401,7 +406,7 @@ void loop() {
       Serial.print(digitalRead(selectButton));
       */
         
-      delay(5000);
+      //delay(5000);
     }
       break;
       
@@ -688,6 +693,20 @@ void doUserInterface(int UIState){
         }
       
         break; 
+
+      //** Emergency Shutdown notification **//
+      case emergencyNotification :
+        lcd.clear();
+        lcd.setCursor(7,0);
+        lcd.print("Pump Fault");
+        lcd.setCursor(0,1);
+        lcd.print("Emergency Shutdown");
+        //lcd.setCursor(0,3);
+        //lcd.print("Select");
+        if(captureButtons()){
+          return;
+        }
+        break;
         
       default :
         break;
@@ -696,17 +715,21 @@ void doUserInterface(int UIState){
 }//end doUserInterface function
 
 
-void emergencyShutdownInterrupt(){
+void doEmergencyShutdown(){
   //send command to turn on emergencyLED  
-  //digitalWrite(alertLED, HIGH);
+  digitalWrite(alertLED, HIGH);
   
   //send command to turn off pumps
-  //digitalWrite(P1CTL, HIGH);
-  //digitalWrite(P2CTL, HIGH);
+  digitalWrite(P1CTL, HIGH);
+  digitalWrite(P2CTL, HIGH);
   //analogWrite(P1Speed, 0);
   //analogWrite(P2Speed, 0);
   
   //send command to turn valves to closed
+  //servo1.setAngle(closed1);
+  //servo2.setAngle(closed2);
+  //servo3.setAngle(closed3);
+  //servo4.setAngle(closed4);
  
   //Write current time and emergency message to SD
   logfile = SD.open(fileName, FILE_WRITE);
@@ -747,8 +770,7 @@ void emergencyShutdownInterrupt(){
     delay(1000);
   }
   */
-  //change state to handle anything else outside of interrupt
-  state = emergencyShutdown;
+  return;
   
 }//end emergencyShutdown function
 
