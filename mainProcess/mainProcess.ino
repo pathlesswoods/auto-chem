@@ -26,7 +26,7 @@ const int P2ReturnSignal = A1;
 const int P1Alarm = 3;
 const int P2Alarm = 1;
 //Speaker
-const int speaker = 8;
+//const int speaker = 8;
 //SD
 //Potentiometers
 const int coarsePot = A2;
@@ -38,6 +38,7 @@ const int alertLED = 9;
 const int selectButton = 14;
 const int cancelButton = 13;
 //const int emergencyButton = #;
+
 
 /* 
  *  Common Global Variables and Initalizations
@@ -83,7 +84,7 @@ const int cleanUpProcess = 6;
 const int emergencyShutdown = 7;
 const int hardwareTesting = 8;
 const int emergencyShutdownState = 9;
-int state = hardwareTesting;
+int state = initial;
 
 // ** states for UI ** //
 const int MenuLanding = 0;
@@ -126,46 +127,6 @@ void setup() {
   }
   Serial.println("Card initialized. \n");
 
-  //**Set up real-time clock**//
-  rtc.begin();
-  rtc.setTime(hours, minutes, seconds);
-  rtc.setDate(day, month, year);
-
-  //**Initiate the LCD**//
-  lcd.init();
-  lcd.backlight();
-
-  //**Set up LEDs**//
-  //pinMode(alertLED, OUTPUT);
-  //pinMode(runningLED, OUTPUT);
-
-  //**Set up buttons**//
-  pinMode(selectButton, INPUT);
-  pinMode(cancelButton, INPUT);
-  //pinMode(emergencyButton, INPUT);
-  //attachInterrupt(digitalPinToInterrupt(emergencyButton), emergencyShutdown,HIGH);
-
-  //**Set up potentiometers **//
-  pinMode(coarsePot, INPUT);
-  //pinMode(finePot, INPUT);
-
-  //**Set up speaker**//
-  pinMode(speaker, OUTPUT);
-
-  //**Set up pumps **//
-  pinMode(P1CTL, OUTPUT);
-  digitalWrite(P1CTL, HIGH); //HIGH=OFF
-  pinMode(P2CTL,OUTPUT);
-  digitalWrite(P2CTL, HIGH); //HIGH=OFF
-  pinMode(P1Speed, OUTPUT);
-  analogWrite(P1Speed,0);//initial speed is 0
-  pinMode(P2Speed, OUTPUT);
-  analogWrite(P2Speed,0);//initial speed is 0
-  pinMode(P1ReturnSignal, INPUT);
-  pinMode(P2ReturnSignal, INPUT);
-  pinMode(P1Alarm, INPUT);
-  pinMode(P2Alarm, INPUT);
-
   //Establishing the communication with the motor shield
   if (controller.begin()) 
     {
@@ -182,6 +143,48 @@ void setup() {
   Serial.println("reboot motor carrier");
   controller.reboot();
   
+  //**Set up real-time clock**//
+  rtc.begin();
+  rtc.setTime(hours, minutes, seconds);
+  rtc.setDate(day, month, year);
+
+  //**Initiate the LCD**//
+  lcd.init();
+  lcd.backlight();
+
+  //**Set up LEDs**//
+  pinMode(alertLED, OUTPUT);
+  pinMode(runningLED, OUTPUT);
+
+  //**Set up buttons**//
+  pinMode(selectButton, INPUT);
+  pinMode(cancelButton, INPUT);
+  //pinMode(emergencyButton, INPUT);
+  //attachInterrupt(digitalPinToInterrupt(emergencyButton), emergencyShutdown,HIGH);
+
+  //**Set up potentiometers **//
+  pinMode(coarsePot, INPUT);
+  //pinMode(finePot, INPUT);
+
+  //**Set up speaker**//
+  //pinMode(speaker, OUTPUT);
+
+  //**Set up pumps **//
+  pinMode(P1CTL, OUTPUT);
+  digitalWrite(P1CTL, HIGH); //HIGH=OFF
+  pinMode(P2CTL,OUTPUT);
+  digitalWrite(P2CTL, HIGH); //HIGH=OFF
+  pinMode(P1Speed, OUTPUT);
+  analogWrite(P1Speed,150);//initial speed is 0
+  Serial.print("\nSet P1Speed to 0.\n");
+  pinMode(P2Speed, OUTPUT);
+  analogWrite(P2Speed,255);//initial speed is 0
+  Serial.print("\nSet P2Speed to 0.\n");
+  pinMode(P1ReturnSignal, INPUT);
+  pinMode(P2ReturnSignal, INPUT);
+  pinMode(P1Alarm, INPUT);
+  pinMode(P2Alarm, INPUT);
+  
 }//end setup function
 
 
@@ -191,7 +194,7 @@ void loop() {
   //check pump error flag every loop
   if(pumpError){
     //set state to emergency state
-    state = emergencyShutdownState;
+    //state = emergencyShutdownState;
   }
   
   switch(state){
@@ -199,9 +202,10 @@ void loop() {
     //** Initialize Necessary Variables **//
     case initial:
     {
+      Serial.print("\nIn initial state.\n");
       //initialize LEDs
-      //digitalWrite(alertLED, LOW);
-      //digitalWrite(runningLED, LOW);
+      digitalWrite(alertLED, LOW);
+      digitalWrite(runningLED, HIGH);
 
       //Create unique filename by using date and time
       String minutesDec = String(minutes, DEC);
@@ -219,11 +223,15 @@ void loop() {
     //** Select Runtime Parameters **//
     case selectParameters:
     {
+      Serial.print("\nselectParameters, going to MenuLanding UI\n");
       //call UI function to get user entered parameters
       doUserInterface(MenuLanding);
 
+      Serial.print("\nselectParameters state, just returned form menuLanding\n");
+
       //calculate the runtime
       //milliliters per minute for flowrate of pumps
+      /*
       float tempRunTimeOne = volumeOne/flowOne;
       float tempRunTimeTwo = volumeTwo/flowTwo;
       if(tempRunTimeOne>tempRunTimeTwo){
@@ -231,10 +239,14 @@ void loop() {
       }else{
         runtime = tempRunTimeTwo;
       }
+      */
+      
+      runtime = 3000;
       
       //open file and write user selected values and runtime to it.
       logfile = SD.open(fileName, FILE_WRITE);
       if(logfile){
+        Serial.print("Entering paramters into file.\n");
         logfile.println("User selected the following parameters: \n");
         logfile.println("Pump One Flow: \n");
         logfile.print(flowOne);
@@ -258,29 +270,31 @@ void loop() {
 
     //** Process Startup **//
     case startProcess:
-      
+      Serial.println("startProcess state\n");
       //set valves to flow reagent position
-      servo1.setAngle(flowReagent1);
-      delay(3000);
-      servo2.setAngle(flowReagent2);
-      delay(3000);
-      servo3.setAngle(flowReagent3);
-      delay(3000);
-      servo4.setAngle(flowReagent4);
-      delay(3000);
+      //servo1.setAngle(flowReagent1);
+      //delay(3000);
+      //servo2.setAngle(flowReagent2);
+      //delay(3000);
+      //servo3.setAngle(flowReagent3);
+      //delay(3000);
+      //servo4.setAngle(flowReagent4);
+      //delay(3000);
 
       //call UI function to ask user to prime pumps
       doUserInterface(PrimePumps);
 
+      Serial.println("\nTurning pumps on and setting speeds.\n");
       //Set speeds, then turn pumps on
-      analogWrite(P1Speed, 30);
-      analogWrite(P2Speed, 30);
+      analogWrite(P1Speed, 200);
+      analogWrite(P2Speed, 200);
       //will probably have to do some math to convert 
       //selected flow into a suitable speed
       //analogWrite(P1Speed, flowOne);
       //analogWrite(P2Speed, flowTwo);
       digitalWrite(P1CTL,LOW);
       digitalWrite(P2CTL,LOW);
+      Serial.print("Finished turning pumps on and setting speeds.");
       
       //Log the time the process started
       logfile = SD.open(fileName, FILE_WRITE);
@@ -305,6 +319,7 @@ void loop() {
 
     //** Process Running **//
     case processRunning:
+      Serial.println("in processRunning");
       //periodically check pumps feedback for errors
       //should be receiving some analog signal
       if((analogRead(P1ReturnSignal)<15)||(analogRead(P2ReturnSignal)<15)){
@@ -320,11 +335,13 @@ void loop() {
     //** Stop Process **//
     case stopProcess:
     {
+      Serial.println("stopProcess state, turning pumps off.");
       //command pump to turn off/stop pump
       digitalWrite(P1CTL,HIGH);
       digitalWrite(P2CTL,HIGH);
-      analogWrite(P1Speed, 0);
-      analogWrite(P2Speed, 0);
+      //analogWrite(P1Speed, 0);
+      //analogWrite(P2Speed, 0);
+      Serial.print("Finished turning pumps off.");
  
       //Log the time the process ended
       logfile = SD.open(fileName, FILE_WRITE);
@@ -351,10 +368,14 @@ void loop() {
 
     //** Clean up Lines **//
     case cleanUpProcess:
+      Serial.println("cleanUpProcess state");
       //Set valves to flow inert gas to clear the lines
       //servo1.setAngle(cleanLines1);
+      //delay(3000);
       //servo2.setAngle(cleanLines2);
+      //delay(3000);
       //servo3.setAngle(cleanLines3);
+      //delay(3000);
       //servo4.setAngle(cleanLines4);
 
       //Call UI to ask user if done clearing the lines.
@@ -362,8 +383,11 @@ void loop() {
 
       //Set valves to closed.
       //servo1.setAngle(closed1);
+      //delay(3000);
       //servo2.setAngle(closed2);
+      //delay(3000);
       //servo3.setAngle(closed3);
+      //delay(3000);
       //servo4.setAngle(closed4);
       
       state = initial;
@@ -371,6 +395,7 @@ void loop() {
 
     //** Emergency Shutdown**//
     case emergencyShutdownState :
+      Serial.println("emergencyShutdownState");
       //call emergency function
       doEmergencyShutdown();
       //notify user of emergency
@@ -382,7 +407,8 @@ void loop() {
     //** Test and Troubleshoot Hardware **//
     case hardwareTesting:
     {  
-      
+      Serial.print("\nhardwareTesting\n");
+
       /*
       lcd.setCursor(0,0);
       lcd.print("Test input");
@@ -390,6 +416,13 @@ void loop() {
       Serial.print("\nValue selected is...\n");
       Serial.print(test);
       */
+      int select = digitalRead(selectButton);
+      Serial.println("\nSelect button reads: ");
+      Serial.print(select);
+      int cancel = digitalRead(cancelButton);
+      Serial.println("\ncancel button reads: ");
+      Serial.print(cancel);
+      delay(2000);
       
       
       /*
@@ -460,6 +493,7 @@ void doUserInterface(int UIState){
         lcd.setCursor(0,3);
         lcd.print("Select");
 
+        Serial.println("\nMenuLanding UIState\n");
         //if select, then go to next menu page, otherwise do nothing
         if(captureButtons()){
           UIState = SelectFlowOne;
@@ -470,6 +504,7 @@ void doUserInterface(int UIState){
 
       //** Menu Page to Select Flow for Pump One **//
       case SelectFlowOne :
+        Serial.println("\nselectFlowOne UIState\n");
         //display initial LCD message
         lcd.setCursor(3,0);
         lcd.print("Select Flow for");
@@ -481,6 +516,8 @@ void doUserInterface(int UIState){
         lcd.print("Select        Cancel");
 
         flowOne = getPumpSetting();
+        lcd.setCursor(7,2);
+        lcd.print("    ");
         lcd.setCursor(7,2);
         lcd.print(flowOne);
 
@@ -497,6 +534,7 @@ void doUserInterface(int UIState){
 
       //** Menu Page to Select Volume for Pump One **//
       case SelectVolumeOne :
+        Serial.println("\nselectVolumeOne UIState\n");
         lcd.setCursor(0,0);
         lcd.print("Select Volume for");
         lcd.setCursor(6,1);
@@ -507,6 +545,8 @@ void doUserInterface(int UIState){
         lcd.print("Select        Cancel");
 
         volumeOne = getPumpSetting();
+        lcd.setCursor(7,2);
+        lcd.print("    ");
         lcd.setCursor(7,2);
         lcd.print(volumeOne);
         
@@ -524,6 +564,7 @@ void doUserInterface(int UIState){
 
       //** Menu Page to Confirm Chosen Volume and Flow for Pump One **//
       case ConfirmPumpOne :
+        Serial.println("ConfirmPumpOne UIState");
         lcd.setCursor(0,0);
         lcd.print("Confirm Pump1 Values");
         lcd.setCursor(4,1);
@@ -551,6 +592,7 @@ void doUserInterface(int UIState){
         
       //** Menu Page to Select Flow for Pump Two **//
       case SelectFlowTwo :
+        Serial.println("selectFlowTwo UIState");
         lcd.setCursor(0,0);
         lcd.print("Select Flow for");
         lcd.setCursor(6,1);
@@ -561,9 +603,11 @@ void doUserInterface(int UIState){
         lcd.print("Select        Cancel");
 
         flowTwo = getPumpSetting();
-
+        lcd.setCursor(7,2);
+        lcd.print("    ");
         lcd.setCursor(7,2);
         lcd.print(flowTwo);
+        
         
         //if press select, then continue with menu, else go back
         if(captureButtons()){
@@ -577,6 +621,7 @@ void doUserInterface(int UIState){
 
       //** Menu Page to Select Volume for Pump Two *//
       case SelectVolumeTwo :
+        Serial.println("selectVolumeOne UIState");
         lcd.setCursor(0,0);
         lcd.print("Select Volume for");
         lcd.setCursor(6,1);
@@ -588,6 +633,8 @@ void doUserInterface(int UIState){
 
         //get selected setting from user and display
         volumeTwo = getPumpSetting();
+        lcd.setCursor(7,2);
+        lcd.print("    ");
         lcd.setCursor(7,2);
         lcd.print(volumeTwo);
         
@@ -603,6 +650,7 @@ void doUserInterface(int UIState){
 
       //** Menu Page to Confirm Flow and Volume for Pump Two **//
       case ConfirmPumpTwo :
+        Serial.println("ConfirmPumpTwo UIState");
         lcd.setCursor(0,0);
         lcd.print("Confirm Pump2 Values");
         lcd.setCursor(4,1);
@@ -629,10 +677,12 @@ void doUserInterface(int UIState){
         break;
       //** Menu Exit Page**//
       case ExitMenu : 
+        Serial.println("ExitMenu UIState");
         //clearly exit menu
         return;
 
       case PrimePumps :
+        Serial.println("PrimePumps UIState");
         lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Please prime pumps.");
@@ -653,6 +703,7 @@ void doUserInterface(int UIState){
 
       //** Display Process Running to LCD **//
       case ProcessRunning :
+        Serial.println("ProcessRunning UIState");
         lcd.setCursor(0,2);
         lcd.print("Process running...");
         return;
@@ -661,6 +712,7 @@ void doUserInterface(int UIState){
 
       //** Confirm the Process Has Finished **//
       case ConfirmEndProcess : 
+        Serial.println("ConfirmEndProcess UIState");
         lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Please confirm");
@@ -679,6 +731,7 @@ void doUserInterface(int UIState){
 
       //** Confirm Lines are Clear **//
       case ConfirmClearedLines :
+        Serial.println("ConfirmClearedLines UIState");
         lcd.setCursor(0,0);
         lcd.print("Please confirm");
         lcd.setCursor(0,1);
@@ -696,6 +749,7 @@ void doUserInterface(int UIState){
 
       //** Emergency Shutdown notification **//
       case emergencyNotification :
+        Serial.println("emergencyNotification UIState");
         lcd.clear();
         lcd.setCursor(7,0);
         lcd.print("Pump Fault");
@@ -716,6 +770,7 @@ void doUserInterface(int UIState){
 
 
 void doEmergencyShutdown(){
+  Serial.println("in emergency shutdown function");
   //send command to turn on emergencyLED  
   digitalWrite(alertLED, HIGH);
   
@@ -796,6 +851,7 @@ int getPumpSetting(){
   int thirdValue=0;
   int fourthValue=0;
 
+  Serial.println("in getPumpSettings");
   //run until all positions are filled
   while(1){
     switch(digit){
@@ -873,7 +929,7 @@ bool captureInput(int* chosenValue, int placeValue){
   //debounce variables
   unsigned long lastSelectButtonPress = 0;
   unsigned long lastCancelButtonPress = 0;
-  unsigned long debounceTime = 100;
+  unsigned long debounceTime = 120;
   
   while(true){
     //get button and potentiometer status
@@ -942,12 +998,18 @@ bool captureButtons(){
   //debounce variables
   unsigned long lastSelectButtonPress = 0;
   unsigned long lastCancelButtonPress = 0;
-  unsigned long debounceTime = 100;
+  unsigned long debounceTime = 120;
 
   while(true){
     //get button and potentiometer status
     readingSelectButton=digitalRead(selectButton);
     readingCancelButton=digitalRead(cancelButton);
+    /*
+    Serial.println("\ncaptureButton, Select = ");
+    Serial.print(readingSelectButton);
+    Serial.println("\ncaptureButton, Cancel = ");
+    Serial.print(readingCancelButton);
+    */
 
     //check state of buttons changed, reset debounce timer
     if(lastSelectButtonState!=readingSelectButton){
