@@ -26,7 +26,7 @@ const int P2ReturnSignal = A1;
 const int P1Alarm = 3;
 const int P2Alarm = 1;
 //Speaker
-//const int speaker = 9;
+//const int speaker = #;
 //SD
 //Potentiometers
 const int coarsePot = A2;
@@ -37,7 +37,7 @@ const int alertLED = 5;
 //Buttons
 const int selectButton = 14;
 const int cancelButton = 13;
-//const int emergencyButton = #;
+const int emergencyButton = 9;
 
 
 /* 
@@ -46,9 +46,9 @@ const int cancelButton = 13;
 //Real-time
 RTCZero rtc;
 const byte seconds = 0;
-const byte minutes = 24;
+const byte minutes = 10;
 const byte hours = 14;
-const byte day = 9;
+const byte day = 4;
 const byte month = 4;
 const byte year = 20;
 //SD
@@ -139,8 +139,6 @@ void setup() {
   // Reboot the motor controller; brings every value back to default
   Serial.println("reboot motor carrier");
   controller.reboot();
-
-  delay(3000);
   
   //**Set up real-time clock**//
   rtc.begin();
@@ -158,8 +156,8 @@ void setup() {
   //**Set up buttons**//
   pinMode(selectButton, INPUT);
   pinMode(cancelButton, INPUT);
-  //pinMode(emergencyButton, INPUT);
-  //attachInterrupt(digitalPinToInterrupt(emergencyButton), emergencyShutdown,HIGH);
+  pinMode(emergencyButton, INPUT);
+  attachInterrupt(digitalPinToInterrupt(emergencyButton), doEmergencyShutdown, FALLING);
 
   //**Set up potentiometers **//
   pinMode(coarsePot, INPUT);
@@ -174,10 +172,10 @@ void setup() {
   pinMode(P2CTL,OUTPUT);
   digitalWrite(P2CTL, HIGH); //HIGH=OFF
   pinMode(P1Speed, OUTPUT);
-  analogWrite(P1Speed,100);//initial speed is 0
+  analogWrite(P1Speed,0);//initial speed is 0
   Serial.print("\nSet P1Speed to 0.\n");
   pinMode(P2Speed, OUTPUT);
-  analogWrite(P2Speed,255);//initial speed is 0
+  analogWrite(P2Speed,0);//initial speed is 0
   Serial.print("\nSet P2Speed to 0.\n");
   pinMode(P1ReturnSignal, INPUT);
   pinMode(P2ReturnSignal, INPUT);
@@ -250,18 +248,18 @@ void loop() {
       //open file and write user selected values and runtime to it.
       logfile = SD.open(fileName, FILE_WRITE);
       if(logfile){
-        Serial.print("Entering paramters into file.\n");
-        logfile.println("User selected the following parameters: \n");
-        logfile.println("Pump One Flow: \n");
-        logfile.print(flowOne);
-        logfile.println("\nPump One Volume: \n");
-        logfile.print(volumeOne);
-        logfile.println("\nPump Two Flow: \n");
-        logfile.print(flowTwo);
-        logfile.println("\nPump Two Volume: \n");
-        logfile.print(volumeTwo);
-        logfile.println("Calculated runtime is: \n");
-        logfile.print(runtime);
+        Serial.print("Entering parameters into file.\n");
+        logfile.println("User selected the following parameters: ");
+        logfile.print("Pump One Flow: ");
+        logfile.println(flowOne);
+        logfile.print("Pump One Volume: ");
+        logfile.println(volumeOne);
+        logfile.print("Pump Two Flow: ");
+        logfile.println(flowTwo);
+        logfile.print("Pump Two Volume: ");
+        logfile.println(volumeTwo);
+        logfile.print("Calculated runtime is: \n");
+        logfile.println(runtime);
         logfile.close();
       }else{
         Serial.println("Error with the file");
@@ -277,18 +275,6 @@ void loop() {
     {
       
       Serial.println("startProcess state\n");
-      /*
-      //set valves to flow reagent position
-      servo1.setAngle(flowReagent1);
-      delay(3000);
-      servo2.setAngle(flowReagent2);
-      delay(3000);
-      servo3.setAngle(flowReagent3);
-      delay(3000);
-      servo4.setAngle(flowReagent4);
-      delay(3000);
-      */
-
       //call UI function to ask user to prime pumps
       doUserInterface(PrimePumps);
 
@@ -309,13 +295,13 @@ void loop() {
       //Log the time the process started
       logfile = SD.open(fileName, FILE_WRITE);
       if(logfile){
-        logfile.println("Process started at: ");
+        logfile.print("Process started at: ");
         String minutesDec = String(minutes, DEC);
         String hoursDec = String(hours, DEC);
         String dayDec = String(day, DEC);
         String monthDec = String(month, DEC);
         String currentDateTime = String(monthDec + "/" + dayDec + " " + hoursDec + ":" + minutesDec);
-        logfile.print(currentDateTime);
+        logfile.println(currentDateTime);
         logfile.close();
       }else{
         Serial.println("Error with the file");
@@ -330,6 +316,7 @@ void loop() {
 
     //** Process Running **//
     case processRunning:
+    
       Serial.println("in processRunning");
       //periodically check pumps feedback for errors
       //should be receiving some analog signal
@@ -357,13 +344,13 @@ void loop() {
       //Log the time the process ended
       logfile = SD.open(fileName, FILE_WRITE);
       if(logfile){
-        logfile.println("Process ended at: ");
+        logfile.print("Process ended at: ");
         String minutesDec = String(minutes, DEC);
         String hoursDec = String(hours, DEC);
         String dayDec = String(day, DEC);
         String monthDec = String(month, DEC);
         String currentDateTime = String(monthDec + "/" + dayDec + " " + hoursDec + ":" + minutesDec);
-        logfile.print(currentDateTime);
+        logfile.println(currentDateTime);
         logfile.close();
       }else{
         Serial.println("Error with the file");
@@ -381,78 +368,18 @@ void loop() {
     case cleanUpProcess:
       Serial.println("cleanUpProcess state");
       //Set valves to flow inert gas to clear the lines
-      /*
       servo1.setAngle(cleanLines1);
       delay(3000);
       servo2.setAngle(cleanLines2);
       delay(3000);
       servo3.setAngle(cleanLines3);
-      */
-      //servo1
-      for (int i=0; i<90; i+=5)
-      {
-        servo1.setAngle(i);
-        Serial.print("Servo position");
-        Serial.println(i);
-        delay(50);
-      }
-      delay(3000);
-      //servo2
-      for (int i=0; i<90; i+=5)
-      {
-        servo2.setAngle(i);
-        Serial.print("Servo position");
-        Serial.println(i);
-        delay(50);
-      }
-      delay(3000);
-      //servo3
-      for (int i=0; i<90; i+=5)
-      {
-        servo3.setAngle(i);
-        Serial.print("Servo position");
-        Serial.println(i);
-        delay(50);
-      }
-      
       delay(3000);
       servo4.setAngle(cleanLines4);
+      delay(2000);
 
       //Call UI to ask user if done clearing the lines.
       doUserInterface(ConfirmClearedLines);
 
-      //servo1
-      for (int i=90; i>0; i-=5)
-      {
-        servo1.setAngle(i);
-        Serial.print("Servo position");
-        Serial.println(i);
-        delay(50);
-      }
-      delay(3000);
-      //servo2
-      for (int i=90; i>0; i-=5)
-      {
-        servo2.setAngle(i);
-        Serial.print("Servo position");
-        Serial.println(i);
-        delay(50);
-      }
-      delay(3000);
-      //servo3
-      for (int i=90; i>0; i-=5)
-      {
-        servo3.setAngle(i);
-        Serial.print("Servo position");
-        Serial.println(i);
-        delay(50);
-      }
-      
-      delay(3000);
-      servo4.setAngle(flowReagent4);
-
-      
-      /*
       //Set valves to closed.
       servo1.setAngle(flowReagent1);
       delay(3000);
@@ -461,7 +388,7 @@ void loop() {
       servo3.setAngle(flowReagent3);
       delay(3000);
       servo4.setAngle(flowReagent4);
-      */
+      delay(2000);
       
       state = initial;
       break;
@@ -470,7 +397,7 @@ void loop() {
     case emergencyShutdownState :
       Serial.println("emergencyShutdownState");
       //call emergency function
-      doEmergencyShutdown();
+      //doEmergencyShutdown();
       //notify user of emergency
       doUserInterface(emergencyNotification);
       //return to initial state.
@@ -489,6 +416,7 @@ void loop() {
       Serial.print("\nValue selected is...\n");
       Serial.print(test);
       */
+      /*
       int select = digitalRead(selectButton);
       Serial.println("\nSelect button reads: ");
       Serial.print(select);
@@ -496,23 +424,7 @@ void loop() {
       Serial.println("\ncancel button reads: ");
       Serial.print(cancel);
       delay(2000);
-      
-      
-      /*
-      if(captureButtons()){
-        Serial.print("\nCaptured a select.\n");
-      }else{
-        Serial.print("\nCaptured a cancel.\n");
-      }
       */
-      /*
-      Serial.print("\nCancel Button status: \n");
-      Serial.print(digitalRead(cancelButton));
-      Serial.print("\nSelect Button status: \n");
-      Serial.print(digitalRead(selectButton));
-      */
-        
-      //delay(5000);
     }
       break;
       
@@ -521,13 +433,13 @@ void loop() {
       break; 
   }
   
-  //delay for testing purposes
-  //delay(500);
-  
 }//end main loop function
 
 
 //Pad a zero in front of digits
+//Input: an integer
+//Output: an string representation of that int
+//        with leading 0 if number less than 10
 String padDigits(int number){
   if(number <10){
     return String("0" + number);
@@ -536,23 +448,12 @@ String padDigits(int number){
   }
 }//end padDigits function
 
+
 //** doUserInterface Function **//
 //Handle everything the user interacts with (LCD, BUTTONS, POTS)
 //Inputs: an integer representing the UI state to initially enter
 //Outputs: none
 void doUserInterface(int UIState){
-  //holds current state of buttons
-  int selectButtonState = LOW;
-  int cancelButtonState = LOW;
-  int lastSelectButtonState = LOW;
-  int lastCancelButtonState = LOW;
-  int readingSelectButton;
-  int readingCancelButton;
-
-  //debounce variables
-  unsigned long lastSelectButtonPress = 0;
-  unsigned long lastCancelButtonPress = 0;
-  unsigned long debounceTime = 50;
   
   while(true){
     
@@ -845,7 +746,7 @@ void doUserInterface(int UIState){
 void doEmergencyShutdown(){
   Serial.println("in emergency shutdown function");
   //send command to turn on emergencyLED  
-  digitalWrite(alertLED, HIGH);
+  //digitalWrite(alertLED, HIGH);
   
   //send command to turn off pumps
   digitalWrite(P1CTL, HIGH);
@@ -898,7 +799,8 @@ void doEmergencyShutdown(){
     delay(1000);
   }
   */
-  return;
+  //change state so the rest can be handled outside of interrupt
+  state = emergencyShutdownState;
   
 }//end emergencyShutdown function
 
@@ -1077,12 +979,6 @@ bool captureButtons(){
     //get button and potentiometer status
     readingSelectButton=digitalRead(selectButton);
     readingCancelButton=digitalRead(cancelButton);
-    /*
-    Serial.println("\ncaptureButton, Select = ");
-    Serial.print(readingSelectButton);
-    Serial.println("\ncaptureButton, Cancel = ");
-    Serial.print(readingCancelButton);
-    */
 
     //check state of buttons changed, reset debounce timer
     if(lastSelectButtonState!=readingSelectButton){
