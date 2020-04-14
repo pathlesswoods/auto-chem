@@ -6,9 +6,6 @@
 #include <RTCZero.h>
 #include <MKRMotorCarrier.h>
 
-//custom libraries
-//#include <ValveControl.h>
-
 /*
  * Definitions for Hardware Pins
  */
@@ -30,10 +27,10 @@ const int P2Alarm = 1;
 //SD
 //Potentiometers
 const int coarsePot = A2;
-//const int finePot = A2;
+//const int finePot = #;
 //LEDS
-const int runningLED = 2;
-const int alertLED = 5;
+//const int runningLED = 2;
+//const int alertLED = 5;
 //Buttons
 const int selectButton = 14;
 const int cancelButton = 13;
@@ -111,9 +108,11 @@ unsigned long starttime = 0;
 void setup() {
   //**Establish serial communication for debugging**//
   Serial.begin(9600);
+  /*
   while(!Serial){
     //gotta wait on the serial port connection
   }
+  */
   
   //**Setup SD**//
   Serial.print("Initializing SD card...\n");
@@ -150,8 +149,8 @@ void setup() {
   lcd.backlight();
 
   //**Set up LEDs**//
-  pinMode(alertLED, OUTPUT);
-  pinMode(runningLED, OUTPUT);
+  //pinMode(alertLED, OUTPUT);
+  //pinMode(runningLED, OUTPUT);
 
   //**Set up buttons**//
   pinMode(selectButton, INPUT);
@@ -202,8 +201,8 @@ void loop() {
     {
       Serial.print("\nIn initial state.\n");
       //initialize LEDs
-      digitalWrite(alertLED, LOW);
-      digitalWrite(runningLED, HIGH);
+      //digitalWrite(alertLED, LOW);
+      //digitalWrite(runningLED, HIGH);
 
       //Create unique filename by using date and time
       String minutesDec = String(minutes, DEC);
