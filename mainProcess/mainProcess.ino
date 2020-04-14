@@ -61,18 +61,14 @@ LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 20, 4);
 bool pumpError = false;
 float pumpMultiplier = 0.516;
 //Motors
-const int flowReagent1 = 30;
-const int flowReagent2 = 30;
-const int flowReagent3 = 30;
-const int flowReagent4 = 30;
+const int flowReagent1 = 0;
+const int flowReagent2 = 0;
+const int flowReagent3 = 0;
+const int flowReagent4 = 0;
 const int cleanLines1 = 90;
 const int cleanLines2 = 90;
 const int cleanLines3 = 90;
 const int cleanLines4 = 90;
-const int closed1 = 0;
-const int closed2 = 0;
-const int closed3 = 0;
-const int closed4 = 0;
 
 // ** states for the main loop ** //
 const int initial = 0;
@@ -236,10 +232,10 @@ void loop() {
       //calculate the runtime
       //milliliters per minute for flowrate of pumps
       
-      float tempRunTimeOne = ((float(volumeOne)/float(flowOne))*60);
+      float tempRunTimeOne = ((float(volumeOne)/float(flowOne))*60000);
       Serial.print("\ntempRunTimeOne = tempRunTimeOne:\n");
       Serial.print(tempRunTimeOne);
-      float tempRunTimeTwo = ((float(volumeTwo)/float(flowTwo))*60);
+      float tempRunTimeTwo = ((float(volumeTwo)/float(flowTwo))*60000);
       Serial.print("\ntempRunTimeTwo = tempRunTimeOne:\n");
       Serial.print(tempRunTimeTwo);
       if(tempRunTimeOne>tempRunTimeTwo){
@@ -279,16 +275,19 @@ void loop() {
     //** Process Startup **//
     case startProcess:
     {
+      
       Serial.println("startProcess state\n");
+      /*
       //set valves to flow reagent position
-      //servo1.setAngle(flowReagent1);
-      //delay(3000);
-      //servo2.setAngle(flowReagent2);
-      //delay(3000);
-      //servo3.setAngle(flowReagent3);
-      //delay(3000);
-      //servo4.setAngle(flowReagent4);
-      //delay(3000);
+      servo1.setAngle(flowReagent1);
+      delay(3000);
+      servo2.setAngle(flowReagent2);
+      delay(3000);
+      servo3.setAngle(flowReagent3);
+      delay(3000);
+      servo4.setAngle(flowReagent4);
+      delay(3000);
+      */
 
       //call UI function to ask user to prime pumps
       doUserInterface(PrimePumps);
@@ -382,25 +381,87 @@ void loop() {
     case cleanUpProcess:
       Serial.println("cleanUpProcess state");
       //Set valves to flow inert gas to clear the lines
-      //servo1.setAngle(cleanLines1);
-      //delay(3000);
-      //servo2.setAngle(cleanLines2);
-      //delay(3000);
-      //servo3.setAngle(cleanLines3);
-      //delay(3000);
-      //servo4.setAngle(cleanLines4);
+      /*
+      servo1.setAngle(cleanLines1);
+      delay(3000);
+      servo2.setAngle(cleanLines2);
+      delay(3000);
+      servo3.setAngle(cleanLines3);
+      */
+      //servo1
+      for (int i=0; i<90; i+=5)
+      {
+        servo1.setAngle(i);
+        Serial.print("Servo position");
+        Serial.println(i);
+        delay(50);
+      }
+      delay(3000);
+      //servo2
+      for (int i=0; i<90; i+=5)
+      {
+        servo2.setAngle(i);
+        Serial.print("Servo position");
+        Serial.println(i);
+        delay(50);
+      }
+      delay(3000);
+      //servo3
+      for (int i=0; i<90; i+=5)
+      {
+        servo3.setAngle(i);
+        Serial.print("Servo position");
+        Serial.println(i);
+        delay(50);
+      }
+      
+      delay(3000);
+      servo4.setAngle(cleanLines4);
 
       //Call UI to ask user if done clearing the lines.
       doUserInterface(ConfirmClearedLines);
 
+      //servo1
+      for (int i=90; i>0; i-=5)
+      {
+        servo1.setAngle(i);
+        Serial.print("Servo position");
+        Serial.println(i);
+        delay(50);
+      }
+      delay(3000);
+      //servo2
+      for (int i=90; i>0; i-=5)
+      {
+        servo2.setAngle(i);
+        Serial.print("Servo position");
+        Serial.println(i);
+        delay(50);
+      }
+      delay(3000);
+      //servo3
+      for (int i=90; i>0; i-=5)
+      {
+        servo3.setAngle(i);
+        Serial.print("Servo position");
+        Serial.println(i);
+        delay(50);
+      }
+      
+      delay(3000);
+      servo4.setAngle(flowReagent4);
+
+      
+      /*
       //Set valves to closed.
-      //servo1.setAngle(closed1);
-      //delay(3000);
-      //servo2.setAngle(closed2);
-      //delay(3000);
-      //servo3.setAngle(closed3);
-      //delay(3000);
-      //servo4.setAngle(closed4);
+      servo1.setAngle(flowReagent1);
+      delay(3000);
+      servo2.setAngle(flowReagent2);
+      delay(3000);
+      servo3.setAngle(flowReagent3);
+      delay(3000);
+      servo4.setAngle(flowReagent4);
+      */
       
       state = initial;
       break;
