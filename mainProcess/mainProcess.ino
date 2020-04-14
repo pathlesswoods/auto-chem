@@ -17,23 +17,23 @@
 //Servo Motors 
 //Have pins defined in the motorcarrier library
 //Pumps
-const int P1CTL = 2;
+const int P1CTL = 10;
 const int P2CTL = 7;
-const int P1Speed = 5;
+const int P1Speed = 8;
 const int P2Speed = 4;
 const int P1ReturnSignal = A6;
 const int P2ReturnSignal = A1;
 const int P1Alarm = 3;
 const int P2Alarm = 1;
 //Speaker
-//const int speaker = 8;
+//const int speaker = 9;
 //SD
 //Potentiometers
 const int coarsePot = A2;
 //const int finePot = A2;
 //LEDS
-const int runningLED = 10;
-const int alertLED = 9;
+const int runningLED = 2;
+const int alertLED = 5;
 //Buttons
 const int selectButton = 14;
 const int cancelButton = 13;
@@ -59,6 +59,7 @@ File logfile;
 LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 20, 4);
 //Pumps
 bool pumpError = false;
+float pumpMultiplier = 0.516;
 //Motors
 const int flowReagent1 = 30;
 const int flowReagent2 = 30;
@@ -142,6 +143,8 @@ void setup() {
   // Reboot the motor controller; brings every value back to default
   Serial.println("reboot motor carrier");
   controller.reboot();
+
+  delay(3000);
   
   //**Set up real-time clock**//
   rtc.begin();
@@ -175,7 +178,7 @@ void setup() {
   pinMode(P2CTL,OUTPUT);
   digitalWrite(P2CTL, HIGH); //HIGH=OFF
   pinMode(P1Speed, OUTPUT);
-  analogWrite(P1Speed,150);//initial speed is 0
+  analogWrite(P1Speed,100);//initial speed is 0
   Serial.print("\nSet P1Speed to 0.\n");
   pinMode(P2Speed, OUTPUT);
   analogWrite(P2Speed,255);//initial speed is 0
@@ -184,6 +187,7 @@ void setup() {
   pinMode(P2ReturnSignal, INPUT);
   pinMode(P1Alarm, INPUT);
   pinMode(P2Alarm, INPUT);
+
   
 }//end setup function
 
@@ -231,18 +235,22 @@ void loop() {
 
       //calculate the runtime
       //milliliters per minute for flowrate of pumps
-      /*
-      float tempRunTimeOne = volumeOne/flowOne;
-      float tempRunTimeTwo = volumeTwo/flowTwo;
+      
+      float tempRunTimeOne = ((float(volumeOne)/float(flowOne))*60);
+      Serial.print("\ntempRunTimeOne = tempRunTimeOne:\n");
+      Serial.print(tempRunTimeOne);
+      float tempRunTimeTwo = ((float(volumeTwo)/float(flowTwo))*60);
+      Serial.print("\ntempRunTimeTwo = tempRunTimeOne:\n");
+      Serial.print(tempRunTimeTwo);
       if(tempRunTimeOne>tempRunTimeTwo){
         runtime = tempRunTimeOne;
       }else{
         runtime = tempRunTimeTwo;
       }
-      */
-      
-      runtime = 3000;
-      
+
+      Serial.print("\nCalculated runtime is: \n");
+      Serial.print(runtime);
+
       //open file and write user selected values and runtime to it.
       logfile = SD.open(fileName, FILE_WRITE);
       if(logfile){
@@ -270,6 +278,7 @@ void loop() {
 
     //** Process Startup **//
     case startProcess:
+    {
       Serial.println("startProcess state\n");
       //set valves to flow reagent position
       //servo1.setAngle(flowReagent1);
@@ -285,13 +294,15 @@ void loop() {
       doUserInterface(PrimePumps);
 
       Serial.println("\nTurning pumps on and setting speeds.\n");
-      //Set speeds, then turn pumps on
-      analogWrite(P1Speed, 200);
-      analogWrite(P2Speed, 200);
-      //will probably have to do some math to convert 
-      //selected flow into a suitable speed
-      //analogWrite(P1Speed, flowOne);
-      //analogWrite(P2Speed, flowTwo);
+      //convert user flow rate settings to analog pin values
+      int convertedFlowOne = (flowOne*pumpMultiplier);
+      int convertedFlowTwo = (flowTwo*pumpMultiplier);
+      Serial.print("\nSet pump1speed pin to: \n");
+      Serial.print(convertedFlowOne);
+      Serial.print("\nSet pump2speed pin to: \n");
+      Serial.print(convertedFlowTwo);
+      analogWrite(P1Speed, convertedFlowOne);
+      analogWrite(P2Speed, convertedFlowTwo);
       digitalWrite(P1CTL,LOW);
       digitalWrite(P2CTL,LOW);
       Serial.print("Finished turning pumps on and setting speeds.");
@@ -314,6 +325,7 @@ void loop() {
 
       //capture current time
       starttime = millis();
+    }
       state = processRunning;
       break;
 
